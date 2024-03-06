@@ -47,11 +47,26 @@ def main():
         df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
 
         # Extraindo o mês da coluna 'Data filiação' e criando uma nova coluna 'Mês'
-        df_projec['Mês'] = df_projec['Data filiação'].dt.month_name("pt_BR")
-        
+        # Mapeando os números dos meses para os nomes em português
+        meses_pt_br = {
+            1: 'Janeiro',
+            2: 'Fevereiro',
+            3: 'Março',
+            4: 'Abril',
+            5: 'Maio',
+            6: 'Junho',
+            7: 'Julho',
+            8: 'Agosto',
+            9: 'Setembro',
+            10: 'Outubro',
+            11: 'Novembro',
+            12: 'Dezembro'
+        }
+        df_projec['Mês'] = df_projec['Data filiação'].dt.month.map(meses_pt_br)
+
         # Agrupando os dados por franquia e mês e somando a quantidade para cada grupo
         dados_agrupados = df_projec.groupby(['Franquia', 'Mês'])['quantidade'].sum().reset_index()
-        
+
         # Definindo a ordem dos meses
         meses_ordem = [
             'Janeiro',

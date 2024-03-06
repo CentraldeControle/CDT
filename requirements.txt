@@ -1,8 +1,6 @@
 pandas
-numpy
 datetime
 timedelta
 streamlit
 plotly
 openpyxl
-locale

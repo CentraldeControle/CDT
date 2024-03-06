@@ -4,3 +4,4 @@ datetime
 timedelta
 streamlit
 plotly
+openpyxl

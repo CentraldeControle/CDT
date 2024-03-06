@@ -5,3 +5,4 @@ timedelta
 streamlit
 plotly
 openpyxl
+locale

@@ -4,6 +4,7 @@ import datetime
 import plotly.graph_objs as go
 import plotly.express as px
 from datetime import timedelta
+import locale
 
 st.set_page_config(
     layout="wide"
@@ -32,7 +33,6 @@ def main():
         # Ler o arquivo Excel
         df = pd.read_excel(uploaded_file, header=0)
 
-
         # Pré-processamento dos dados
         processed_data = preprocess_data(df)
 
@@ -47,7 +47,7 @@ def main():
         df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
 
         # Extraindo o mês da coluna 'Data filiação' e criando uma nova coluna 'Mês'
-        df_projec['Mês'] = df_projec['Data filiação'].dt.month_name(locale="pt_BR")
+        df_projec['Mês'] = df_projec['Data filiação'].dt.month_name(locale.setlocale(locale.LC_TIME, 'pt_BR'))
         
         # Agrupando os dados por franquia e mês e somando a quantidade para cada grupo
         dados_agrupados = df_projec.groupby(['Franquia', 'Mês'])['quantidade'].sum().reset_index()
@@ -116,7 +116,6 @@ def main():
 
         # Checkbox para selecionar as franquias
         franquias_selecionadas = st.sidebar.multiselect('Vendas de cada franquias por mês', franquias_disponiveis, default=franquias_disponiveis)
-
         
         current_date = datetime.datetime.now()
         days_passed_in_month = current_date.day
@@ -161,9 +160,6 @@ def main():
                     return df_total_por_promotor
                 
         df_total_por_promotor = calcular_meta_restante(df_total_por_promotor)
-        
-
-
 
         # Criar o gráfico de barras usando Plotly Express
         fig2 = px.bar(df_total_por_promotor, x='Franquia', y='media_diaria',
@@ -178,7 +174,6 @@ def main():
                                 hovertemplate='%{x}<br>Média Diária: %{y:.2f}')  # Template do hover
             
             fig2.update_layout(showlegend=True,yaxis=dict(range=[0, df_total_por_promotor['media_diaria'].max()* 1.2]))
-
 
         # Adicionar um checkbox
         show_graph = st.sidebar.checkbox('Média Diária de Vendas de Cada Franquia até o Dia Anterior')
@@ -214,8 +209,6 @@ def main():
         df_total_por_promotor['atingido'] = df_total_por_promotor['quantidade']
         df_total_por_promotor['falta'] = df_total_por_promotor['meta'] - df_total_por_promotor['quantidade']
         
-        
-
         # Função para criar o gráfico
         def plotar_grafico2(franquias_selecionadas, df_total_por_promotor):
             if not franquias_selecionadas:
@@ -261,12 +254,6 @@ def main():
                     # Exibir o gráfico
                     cols[i].plotly_chart(fig, config={'displayModeBar': False, 'displaylogo': False})
 
-
-
-        # Exemplo de uso:
-        # Supondo que df_total_por_promotor seja seu DataFrame com as colunas 'Franquia', 'atingido', 'meta' e 'meta_restante'
-        # df_total_por_promotor = ...
-
         # Chame a função para calcular a meta restante
         df_total_por_promotor = calcular_meta_restante(df_total_por_promotor)
 
@@ -275,16 +262,6 @@ def main():
 
         # Chamar a função para plotar os gráficos
         plotar_grafico2(franquias_selecionadas, df_total_por_promotor)
-        
-        
-        
-        
-
-
-        # Exemplo de uso:
-        # Supondo que df_total_por_promotor seja seu DataFrame com as colunas 'media_diaria' e 'total_atingido'
-        # df_total_por_promotor = ...
-
 
         # Converter a coluna 'Data filiação' para datetime
         df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])

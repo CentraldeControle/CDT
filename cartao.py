@@ -233,7 +233,6 @@ def main():
         df_total_por_promotor['atingido'] = df_total_por_promotor['quantidade']
         df_total_por_promotor['falta'] = df_total_por_promotor['meta'] - df_total_por_promotor['quantidade']
         
-        st.markdown('<hr>', unsafe_allow_html=True)
         
         # Função para criar o gráfico
         def plotar_grafico2(franquias_selecionadas, df_total_por_promotor):
@@ -241,6 +240,7 @@ def main():
                 st.write(' ')
             else:
                 # Criar uma figura para cada franquia selecionada
+                st.markdown('<hr>', unsafe_allow_html=True)
                 cols = st.columns(len(franquias_selecionadas))
                 for i, franquia in enumerate(franquias_selecionadas):
                     row = df_total_por_promotor[df_total_por_promotor['Franquia'] == franquia].iloc[0]

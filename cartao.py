@@ -4,11 +4,11 @@ import datetime
 import plotly.graph_objs as go
 import plotly.express as px
 from datetime import timedelta
-import locale
 
 st.set_page_config(
     layout="wide"
 )
+
 # Função para pré-processamento
 def preprocess_data(data):
     # Corrigir o tipo de dado para datetime
@@ -88,6 +88,10 @@ def main():
 
         # Ordenando os dados pela ordem definida
         dados_agrupados = dados_agrupados.sort_values(by='Mês')
+        
+        # Definindo uma paleta de cores
+        cores = ['#007bff', '#ffc107', '#28a745', '#17a2b8']
+        
 
         # Função para criar o gráfico
         def plotar_grafico(franquias_selecionadas):
@@ -95,6 +99,9 @@ def main():
                 st.write(" ")
             else:
                 # Criando os trace para cada franquia selecionada
+                # Se a quantidade de franquias selecionadas for maior que a paleta de cores, as cores se repetirão
+                cor_iter = iter(cores * (len(franquias_selecionadas) // len(cores) + 1))
+
                 traces = []
                 for franquia in franquias_selecionadas:
                     dados_franquia = dados_agrupados[dados_agrupados['Franquia'] == franquia]
@@ -104,7 +111,8 @@ def main():
                         name=franquia,
                         hoverinfo='x+y',  # Mostrar valor de x, y e o texto personalizado
                         text=dados_franquia['quantidade'],  # Adicionar o valor da quantidade como texto
-                        textposition='outside'  # Posição do texto fora da barra
+                        textposition='outside',
+                        marker=dict(color=next(cor_iter))# Posição do texto fora da barra
                     )
                     traces.append(trace)
 
@@ -180,7 +188,8 @@ def main():
         fig2 = px.bar(df_total_por_promotor, x='Franquia', y='media_diaria',
                     title='Média Diária de Vendas de Cada Franquia até o Dia Anterior',
                     labels={'media_diaria': 'Média Diária de Vendas', 'Franquia': 'Franquia'},
-                    color='Franquia')
+                    color='Franquia',
+                    color_discrete_sequence=cores)
         
         # Adicionar a quantidade total em cima de cada barra
         for i, media in enumerate(df_total_por_promotor['media_diaria']):
@@ -224,6 +233,8 @@ def main():
         df_total_por_promotor['atingido'] = df_total_por_promotor['quantidade']
         df_total_por_promotor['falta'] = df_total_por_promotor['meta'] - df_total_por_promotor['quantidade']
         
+        st.markdown('<hr>', unsafe_allow_html=True)
+        
         # Função para criar o gráfico
         def plotar_grafico2(franquias_selecionadas, df_total_por_promotor):
             if not franquias_selecionadas:
@@ -261,7 +272,7 @@ def main():
                     fig.add_annotation(x=0.5, y=-0.15,
                                         text=f"Projeção : {meta_restante_arredondada}",
                                         showarrow=False,
-                                        font=dict(color="white", size=14))
+                                        font=dict(size=14))
 
                     # Atualizar o layout
                     fig.update_layout(width=400, height=300)
@@ -283,6 +294,8 @@ def main():
 
         # Checkbox para selecionar a data
         show_date_input = st.sidebar.checkbox('Selecionar Data')
+        
+        st.markdown('<hr>', unsafe_allow_html=True)
 
         if show_date_input:
             # Sidebar para selecionar a data
@@ -299,7 +312,8 @@ def main():
                 fig4 = px.bar(data, x='Franquia', y='quantidade', 
                             title=title,
                             labels={'quantidade': 'Quantidade', 'Franquia': 'Franquia'},
-                            color='Franquia',)
+                            color='Franquia',
+                            color_discrete_sequence=cores)
                 
                 # Adicionar a quantidade no topo de cada barra
                 fig4.update_traces(texttemplate='%{y}', textposition='outside')

@@ -98,8 +98,7 @@ def main():
             if not franquias_selecionadas:
                 st.write(" ")
             else:
-                # Criando os trace para cada franquia selecionada
-                # Se a quantidade de franquias selecionadas for maior que a paleta de cores, as cores se repetirão
+                
                 cor_iter = iter(cores * (len(franquias_selecionadas) // len(cores) + 1))
 
                 traces = []

@@ -8,7 +8,7 @@ from datetime import timedelta
 st.set_page_config(
     layout="wide"
 )
-#linha de teste
+
 # Função para pré-processamento
 def preprocess_data(data):
     # Corrigir o tipo de dado para datetime

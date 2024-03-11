@@ -128,7 +128,7 @@ def main():
                 fig.update_layout(showlegend=True,yaxis=dict(range=[0, dados_agrupados['quantidade'].max() * 1.15]))
 
                 # Exibindo o gráfico
-                st.plotly_chart(fig, config={
+                st.plotly_chart(fig, use_container_width=True, config={
                     'displayModeBar': False,  # Para ocultar a barra de ferramentas
                     'displaylogo': False  # Para ocultar o logo
                 })
@@ -210,7 +210,7 @@ def main():
         with col2:
         # Mostrar o gráfico apenas se a caixa de seleção estiver marcada
             if show_graph:
-                st.plotly_chart(fig2, config={
+                st.plotly_chart(fig2, use_container_width=True, config={
                                             'displayModeBar': False,  # Para ocultar a barra de ferramentas
                                             'displaylogo': False  })# Para ocultar o logo))
 
@@ -250,7 +250,7 @@ def main():
                     fig.add_trace(go.Indicator(
                         mode="gauge+number+delta",
                         value=row['atingido'],  # Definir o valor como a quantidade atingida
-                        title={'text': f"Projeção indicador de {row['Franquia']}"},
+                        title={'text': f"{row['Franquia']}"},
                         delta = {'reference': row['meta'], 'increasing': {'color': "RebeccaPurple"}},
                         gauge={'axis': {'range': [None, row['meta']], 'tickwidth': 1, 'tickcolor': "darkblue"},
                             'bar': {'color': "darkblue"},
@@ -268,16 +268,15 @@ def main():
                     meta_restante_arredondada = round(row['meta_restante'])
 
                     # Adicionar um texto indicando a meta restante
-                    fig.add_annotation(x=0.5, y=-0.15,
+                    fig.add_annotation(x=0.5, y=0.15,
                                         text=f"Projeção : {meta_restante_arredondada}",
                                         showarrow=False,
                                         font=dict(size=14))
 
                     # Atualizar o layout
-                    fig.update_layout(width=400, height=300)
 
                     # Exibir o gráfico
-                    cols[i].plotly_chart(fig, config={'displayModeBar': False, 'displaylogo': False})
+                    cols[i].plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'displaylogo': False})
 
         # Chame a função para calcular a meta restante
         df_total_por_promotor = calcular_meta_restante(df_total_por_promotor)
@@ -320,7 +319,7 @@ def main():
                 
                 # Ajustar o limite do eixo y
                 fig4.update_layout(yaxis=dict(range=[0, data['quantidade'].max() * 1.1]))  # Aumenta 10% além do valor máximo
-                return st.plotly_chart(fig4, config={'displayModeBar': False, 'displaylogo': False})
+                return st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False, 'displaylogo': False})
 
             plot_graph(quantidade_por_franquia, f'Vendas por Franquia em {selected_date.strftime("%d/%m/%Y")}')
 

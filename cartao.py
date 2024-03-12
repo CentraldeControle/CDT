@@ -4,6 +4,7 @@ import datetime
 import plotly.graph_objs as go
 import plotly.express as px
 from datetime import timedelta
+import os
 
 st.set_page_config(
     layout="wide"
@@ -26,12 +27,19 @@ def preprocess_data(data):
 def main():
     st.markdown("<h1 style='text-align: center;'>CDT</h1>", unsafe_allow_html=True)
 
-    # Upload do arquivo de dados
-    uploaded_file = st.file_uploader("Carregar arquivo Excel", type=["xlsx"], label_visibility='collapsed')
+    # Lista todos os arquivos Excel na pasta
+    excel_files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
 
-    if uploaded_file is not None:
+    if len(excel_files) == 0:
+        st.error('Nenhum arquivo Excel encontrado na pasta.')
+    else:
+        # Seleciona o arquivo Excel mais recente
+        selected_file = max(excel_files, key=os.path.getmtime)
+        
+
+    if selected_file is not None:
         # Ler o arquivo Excel
-        df = pd.read_excel(uploaded_file, header=0)
+        df = pd.read_excel(selected_file, header=0)
 
         # Pré-processamento dos dados
         processed_data = preprocess_data(df)

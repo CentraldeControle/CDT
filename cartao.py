@@ -276,12 +276,15 @@ def main():
                     meta_restante_arredondada = round(row['meta_restante'])
 
                     # Adicionar um texto indicando a meta restante
-                    fig.add_annotation(x=0.5, y=0.15,
+                    fig.add_annotation(x=0.5, y=0.3,
                                         text=f"Projeção : {meta_restante_arredondada}",
                                         showarrow=False,
                                         font=dict(size=14))
 
                     # Atualizar o layout
+                    fig.update_layout(
+                        margin=dict(l=0, r=30, t=0, b=20)  # Adjust left, right, top, and bottom margins to 10px
+                    )
 
                     # Exibir o gráfico
                     cols[i].plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'displaylogo': False})

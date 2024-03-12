@@ -207,7 +207,7 @@ def main():
             fig2.update_layout(showlegend=True,yaxis=dict(range=[0, df_total_por_promotor['media_diaria'].max()* 1.2]))
 
         # Adicionar um checkbox
-        show_graph = st.sidebar.checkbox('Média Diária de Vendas de Cada Franquia até o Dia Anterior')
+        show_graph = st.sidebar.checkbox('Média Diária de Vendas de Cada Franquia até o Dia Anterior', value=True)
 
         col1,col2 = st.columns(2)
         
@@ -290,7 +290,7 @@ def main():
         df_total_por_promotor = calcular_meta_restante(df_total_por_promotor)
 
         # Adicionar uma barra de seleção para escolher as franquias (permitindo seleção múltipla)
-        franquias_selecionadas = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique())
+        franquias_selecionadas = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique(),default=df_total_por_promotor['Franquia'])
 
         # Chamar a função para plotar os gráficos
         plotar_grafico2(franquias_selecionadas, df_total_por_promotor)

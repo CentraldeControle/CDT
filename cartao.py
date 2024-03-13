@@ -283,7 +283,7 @@ def main():
 
                     # Atualizar o layout
                     fig.update_layout(
-                        margin=dict(l=0, r=30, t=0, b=20)  # Adjust left, right, top, and bottom margins to 10px
+                        margin=dict(l=15, r=30, t=0, b=20)  # Adjust left, right, top, and bottom margins to 10px
                     )
 
                     # Exibir o gráfico

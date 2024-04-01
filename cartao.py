@@ -148,49 +148,77 @@ def main():
         franquias_selecionadas = st.sidebar.multiselect('Vendas de cada franquias por mês', franquias_disponiveis, default=franquias_disponiveis)
         
         current_date = datetime.datetime.now()
-        days_passed_in_month = current_date.day
 
-        # Filtrar dados para o mês atual
+        # Tenta filtrar os dados para o mês atual
         df_current_month = processed_data[processed_data['Data filiação'].dt.month == current_date.month]
+
+        # Se não houver dados para o mês atual, busca os dados do mês anterior
+        if df_current_month.empty:
+            # Calcula o mês e ano anteriores
+            if current_date.month == 1:
+                previous_month = 12
+                year = current_date.year - 1
+            else:
+                previous_month = current_date.month - 1
+                year = current_date.year
+
+            # Filtra os dados para o mês anterior
+            df_current_month = processed_data[(processed_data['Data filiação'].dt.month == previous_month) &
+                                            (processed_data['Data filiação'].dt.year == year)]
+
 
         # Calcular o total de quantidade para cada promotor
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()
 
-        def calcular_meta_restante(df_total_por_promotor):
-                # Obtém a data atual
-                    data_atual = datetime.date.today()
-                    
-                    # Obtém o primeiro dia do mês atual
-                    primeiro_dia_mes_atual = data_atual.replace(day=1)
 
-                    # Obtém o último dia do mês atual
-                    ultimo_dia_mes_atual = data_atual.replace(day=1, month=data_atual.month % 12 + 1) - timedelta(days=1)
+        def calcular_meta_restante(df_total_por_promotor, processed_data):
+            # Obtém a data atual
+            data_atual = datetime.date.today() - timedelta(days=1)
+            
+            # Verifica se existem dados para o mês atual no dataframe 'processed_data'
+            if not processed_data[processed_data['Data filiação'].dt.month == data_atual.month].empty:
+                # Usa dados do mês atual
+                primeiro_dia_mes_atual = data_atual.replace(day=1)
+            else:
+                # Se não houver dados para o mês atual, ajusta para o mês anterior
+                if data_atual.month == 1:
+                    data_atual = data_atual.replace(year=data_atual.year - 1, month=12, day=31)
+                else:
+                    data_atual = data_atual.replace(month=data_atual.month - 1, day=1) + timedelta(days=-1)
+                primeiro_dia_mes_atual = data_atual.replace(day=1)
+            
+            # Obtém o último dia do mês atual
+            ultimo_dia_mes_atual = data_atual.replace(day=1, month=data_atual.month % 12 + 1) - timedelta(days=1)
+            
+            # Calcula quantos dias faltam para o fim do mês
+            dias_restantes = (ultimo_dia_mes_atual - data_atual).days + 1
+            
+            # Calcula quantos dias passaram desde o primeiro dia do mês até a data atual, excluindo domingos
+            dias_passados = sum(1 for i in range((data_atual - primeiro_dia_mes_atual).days + 1) if (primeiro_dia_mes_atual + timedelta(days=i)).weekday() != 6)
+            
+            # Garante que 'dias_passados' seja pelo menos 1 para evitar divisão por zero
+            dias_passados = max(1, dias_passados)
+            
+            # Conta a quantidade de domingos restantes no mês
+            domingos_restantes = sum(1 for i in range(dias_restantes) if (data_atual + timedelta(days=i)).weekday() == 6)
+            
+            # Calcula os dias restantes excluindo os domingos
+            dias_restantes_sem_domingos = dias_restantes - domingos_restantes
+            
+            # Calcula a média diária excluindo os domingos
+            df_total_por_promotor['media_diaria'] = df_total_por_promotor['quantidade'] / dias_passados
+            
+            # Multiplica a média diária pelo número de dias restantes
+            df_total_por_promotor['meta_restante'] = df_total_por_promotor['media_diaria'] * dias_restantes_sem_domingos
+            
+            # Soma o total atingido até a data atual
+            df_total_por_promotor['meta_restante'] += df_total_por_promotor['quantidade']
+            
+            return df_total_por_promotor
 
-                    # Calcula quantos dias faltam para o fim do mês atual
-                    dias_restantes = (ultimo_dia_mes_atual - data_atual).days + 1  # Incluindo o dia atual
-                    
-                    # Calcula quantos dias passaram desde o primeiro dia do mês atual até a data atual, excluindo domingos
-                    dias_passados = sum(1 for i in range((data_atual - primeiro_dia_mes_atual).days) if (primeiro_dia_mes_atual + timedelta(days=i)).weekday() != 6)
-
-                    # Conta a quantidade de domingos restantes no mês
-                    domingos_restantes = sum(1 for i in range(dias_restantes) if (data_atual + timedelta(days=i)).weekday() == 6)
-                    
-                    # Calcula os dias restantes excluindo os domingos
-                    dias_restantes_sem_domingos = dias_restantes - domingos_restantes
-
-                    # Calcula a média diária excluindo os domingos
-                    df_total_por_promotor['media_diaria'] = df_total_por_promotor['quantidade'] / dias_passados
-
-                    # Multiplica a média diária pelo número de dias restantes
-                    df_total_por_promotor['meta_restante'] = df_total_por_promotor['media_diaria'] * dias_restantes_sem_domingos
-
-                    # Soma o total atingido até a data atual
-                    df_total_por_promotor['meta_restante'] += df_total_por_promotor['quantidade']
-
-                    return df_total_por_promotor
-                
-        df_total_por_promotor = calcular_meta_restante(df_total_por_promotor)
-
+        # Chame a função passando 'processed_data' como argumento adicional se necessário.
+        df_total_por_promotor = calcular_meta_restante(df_total_por_promotor, processed_data)
+        
         # Criar o gráfico de barras usando Plotly Express
         fig2 = px.bar(df_total_por_promotor, x='Franquia', y='media_diaria',
                     title='Média Diária de Vendas de Cada Franquia até o Dia Anterior',
@@ -227,10 +255,6 @@ def main():
 
         # Converta a coluna 'data' para o tipo datetime
         processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
-
-        # Filtrar dados para o mês atual
-        current_date = datetime.datetime.now()
-        df_current_month = processed_data[processed_data['Data filiação'].dt.month == current_date.month]
 
         # Calcular o total de quantidade para cada promotor no mês atual
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()
@@ -290,7 +314,7 @@ def main():
                     cols[i].plotly_chart(fig, use_container_width=True, config={'displayModeBar': False, 'displaylogo': False})
 
         # Chame a função para calcular a meta restante
-        df_total_por_promotor = calcular_meta_restante(df_total_por_promotor)
+        df_total_por_promotor = calcular_meta_restante(df_total_por_promotor,processed_data)
 
         # Adicionar uma barra de seleção para escolher as franquias (permitindo seleção múltipla)
         franquias_selecionadas = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique(),default=df_total_por_promotor['Franquia'])

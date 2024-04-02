@@ -43,7 +43,7 @@ def main():
         
         # Pré-processamento dos dados
         processed_data = preprocess_data(df)
-
+        
         
         # Adicionando o código de projeção
         processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])

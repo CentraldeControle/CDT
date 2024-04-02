@@ -21,7 +21,7 @@ def preprocess_data(data):
     # Adicionar coluna de quantidade com valor 1
     data['quantidade'] = 1
     # Agrupar por data de filiação e franquia e calcular a contagem
-    data = data.groupby(['Data filiação','Franquia']).size().reset_index(name='quantidade')
+    data = data.groupby(['Data filiação','Franquia','Promotor Venda Prospecção']).size().reset_index(name='quantidade')
     return data
 
 def main():
@@ -40,11 +40,11 @@ def main():
     if selected_file is not None:
         # Ler o arquivo Excel
         df = pd.read_excel(selected_file, header=0)
-
+        
         # Pré-processamento dos dados
         processed_data = preprocess_data(df)
 
-
+        
         # Adicionando o código de projeção
         processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
         processed_data['mes'] = processed_data['Data filiação'].dt.month
@@ -98,7 +98,7 @@ def main():
         dados_agrupados = dados_agrupados.sort_values(by='Mês')
         
         # Definindo uma paleta de cores
-        cores = ['#007bff', '#ffc107', '#28a745', '#17a2b8']
+        cores = ['#007bff', '#ffc107', '#28a745', '#17a2b8', '#ffc885']
         
 
         # Função para criar o gráfico
@@ -324,6 +324,33 @@ def main():
 
         # Converter a coluna 'Data filiação' para datetime
         df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
+
+        total_vendas_por_promotor = processed_data.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+
+        # Ordenando os promotores pelo total de vendas e pegando os top 5
+        top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
+
+        # Criando um gráfico de barras para visualizar os top 5 vendedores
+        fig = px.bar(top_5_vendedores, x='quantidade', y='Promotor Venda Prospecção',
+                    title='Top 5 Promotores de Venda',
+                    labels={'Promotor Venda Prospecção': 'Promotor', 'quantidade': 'Total de Vendas'},
+                    color='Promotor Venda Prospecção',
+                    text='quantidade',
+                    color_discrete_sequence=cores)
+
+        # Atualizando o layout para remover a legenda
+        fig.update_layout(showlegend=False)
+
+        # Ajustando a configuração do texto para garantir que ele apareça sobre as barras
+        fig.update_traces(texttemplate='%{text}', textposition='outside')
+
+        # Ajustar o limite do eixo y para evitar cortar o valor em cima da barra
+        max_quantidade = top_5_vendedores['quantidade'].max()
+        fig.update_layout(xaxis=dict(range=[0, max_quantidade * 1.2]))  # Aumenta 20% além do valor máximo
+
+        # Exibindo o gráfico no Streamlit
+        st.plotly_chart(fig)
+
 
         # Checkbox para selecionar a data
         show_date_input = st.sidebar.checkbox('Selecionar Data')

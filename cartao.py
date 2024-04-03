@@ -1,9 +1,11 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import datetime
 import plotly.graph_objs as go
 import plotly.express as px
 from datetime import timedelta
+import matplotlib.pyplot as plt
 import os
 
 st.set_page_config(
@@ -146,6 +148,8 @@ def main():
 
         # Checkbox para selecionar as franquias
         franquias_selecionadas = st.sidebar.multiselect('Vendas de cada franquias por mês', franquias_disponiveis, default=franquias_disponiveis)
+
+#====================================================================================================================================================================#
         
         current_date = datetime.datetime.now()
 
@@ -250,6 +254,8 @@ def main():
                                             'displayModeBar': False,  # Para ocultar a barra de ferramentas
                                             'displaylogo': False  })# Para ocultar o logo))
 
+#====================================================================================================================================================================#
+
         # Definir metas de quantidade para cada promotor por mês
         metas = {'CALDAS NOVAS': 400, 'FORMOSA': 400, 'GOIANIA CENTRO NORTE': 800, 'SAO JOAO DA BOA VISTA': 400}
 
@@ -317,39 +323,109 @@ def main():
         df_total_por_promotor = calcular_meta_restante(df_total_por_promotor,processed_data)
 
         # Adicionar uma barra de seleção para escolher as franquias (permitindo seleção múltipla)
-        franquias_selecionadas = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique(),default=df_total_por_promotor['Franquia'])
+        franquias_selecionadas2 = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique(),default=df_total_por_promotor['Franquia'])
 
         # Chamar a função para plotar os gráficos
-        plotar_grafico2(franquias_selecionadas, df_total_por_promotor)
+        plotar_grafico2(franquias_selecionadas2, df_total_por_promotor)
 
-        # Converter a coluna 'Data filiação' para datetime
-        df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
+#====================================================================================================================================================================#
 
-        total_vendas_por_promotor = processed_data.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+       
+
+        # Adicionando um seletor na sidebar para escolher a franquia
+        franquias = processed_data['Franquia'].unique()
+        franquia_selecionada3 = st.sidebar.selectbox('Top 5 Promotores/Franquia', franquias)
+
+        # Filtrando os dados para a franquia selecionada
+        dados_filtrados = processed_data[processed_data['Franquia'] == franquia_selecionada3]
+
+        # Agrupando os dados filtrados por Promotor e somando as quantidades
+        total_vendas_por_promotor = dados_filtrados.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
 
         # Ordenando os promotores pelo total de vendas e pegando os top 5
         top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
 
-        # Criando um gráfico de barras para visualizar os top 5 vendedores
-        fig = px.bar(top_5_vendedores, x='quantidade', y='Promotor Venda Prospecção',
-                    title='Top 5 Promotores de Venda',
+
+        # Criando um gráfico de barras para visualizar os top 5 vendedores da franquia selecionada
+        fig1 = px.bar(top_5_vendedores, x='Promotor Venda Prospecção', y='quantidade',
+                    title=f'Top 5 Promotores de Venda - Franquia {franquia_selecionada3}',
                     labels={'Promotor Venda Prospecção': 'Promotor', 'quantidade': 'Total de Vendas'},
                     color='Promotor Venda Prospecção',
                     text='quantidade',
                     color_discrete_sequence=cores)
 
-        # Atualizando o layout para remover a legenda
-        fig.update_layout(showlegend=False)
+        fig1.update_layout(showlegend=False)
+        fig1.update_traces(texttemplate='%{text}', textposition='outside')
 
-        # Ajustando a configuração do texto para garantir que ele apareça sobre as barras
-        fig.update_traces(texttemplate='%{text}', textposition='outside')
-
-        # Ajustar o limite do eixo y para evitar cortar o valor em cima da barra
         max_quantidade = top_5_vendedores['quantidade'].max()
-        fig.update_layout(xaxis=dict(range=[0, max_quantidade * 1.2]))  # Aumenta 20% além do valor máximo
+        fig1.update_layout(yaxis=dict(range=[0, max_quantidade * 1.2]))
 
-        # Exibindo o gráfico no Streamlit
-        st.plotly_chart(fig)
+
+#====================================================================================================================================================================#    
+
+        # Criando uma nova coluna 'Trimestre' e 'Ano' para facilitar a seleção
+        processed_data['Ano'] = processed_data['Data filiação'].dt.year
+        processed_data['Trimestre'] = processed_data['Data filiação'].dt.month.apply(lambda x: (x-1)//3 + 1)
+
+        # Obtendo os trimestres únicos disponíveis
+        trimestres_unicos = processed_data[['Ano', 'Trimestre']].drop_duplicates()
+        trimestres_unicos['Ano_Trimestre'] = trimestres_unicos.apply(lambda x: f"{x['Ano']} Q{x['Trimestre']}", axis=1)
+        trimestres_unicos = trimestres_unicos.sort_values(by=['Ano', 'Trimestre'], ascending=[False, False])
+        lista_trimestres = trimestres_unicos['Ano_Trimestre'].tolist()
+
+        # Seletor para escolher o trimestre na sidebar
+        trimestre_escolhido = st.sidebar.selectbox('Escolha o Trimestre', lista_trimestres)
+        ano_escolhido, q_escolhido = trimestre_escolhido.split(' Q')
+        q_escolhido = int(q_escolhido)
+
+        # Filtrando o DataFrame pelo trimestre escolhido
+        dados_trimestre_escolhido = processed_data[(processed_data['Ano'] == int(ano_escolhido)) & (processed_data['Trimestre'] == q_escolhido)]
+
+        # Continuação do processo de filtragem por franquia com a sidebar, como antes
+        franquias = dados_trimestre_escolhido['Franquia'].unique()
+        
+
+        # Filtrando por franquia selecionada
+        dados_filtrados = dados_trimestre_escolhido[dados_trimestre_escolhido['Franquia'] == franquia_selecionada3]
+
+        # Agrupando por Promotor e somando as quantidades
+        total_vendas_por_promotor = dados_filtrados.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+
+        # Ordenando e pegando os top 5 promotores
+        top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
+
+
+        fig2 = px.bar(top_5_vendedores, x='Promotor Venda Prospecção', y='quantidade',
+                    title=f'Top 5 Promotores de Venda - Franquia {franquia_selecionada3}, {trimestre_escolhido}',
+                    labels={'Promotor Venda Prospecção': 'Promotor', 'quantidade': 'Total de Vendas'},
+                    color='Promotor Venda Prospecção',
+                    text='quantidade',
+                    color_discrete_sequence=cores)
+
+        fig2.update_layout(showlegend=False)
+        fig2.update_traces(texttemplate='%{text}', textposition='outside')
+
+        max_quantidade = top_5_vendedores['quantidade'].max()
+        fig2.update_layout(yaxis=dict(range=[0, max_quantidade * 1.2]))
+       
+
+        max_quantidade = top_5_vendedores['quantidade']
+
+        col3,col4 = st.columns(2)
+        with col3:
+            st.plotly_chart(fig1,use_container_width=True,)
+        with col4:
+            st.plotly_chart(fig2,use_container_width=True,)
+        
+#====================================================================================================================================================================#
+
+        # Processo de conversão da coluna 'Data Filiação' para datetime, se necessário
+        # processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
+
+
+
+
+
 
 
         # Checkbox para selecionar a data

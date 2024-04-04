@@ -5,7 +5,6 @@ import datetime
 import plotly.graph_objs as go
 import plotly.express as px
 from datetime import timedelta
-import matplotlib.pyplot as plt
 import os
 
 st.set_page_config(

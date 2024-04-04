@@ -4,3 +4,4 @@ timedelta
 streamlit
 plotly
 openpyxl
+matplotlib

@@ -256,7 +256,7 @@ def main():
 #====================================================================================================================================================================#
 
         # Definir metas de quantidade para cada promotor por mês
-        metas = {'CALDAS NOVAS': 400, 'FORMOSA': 400, 'GOIANIA CENTRO NORTE': 800, 'SAO JOAO DA BOA VISTA': 400}
+        metas = {'CALDAS NOVAS': 400, 'FORMOSA': 400, 'GOIANIA CENTRO NORTE': 1000, 'SAO JOAO DA BOA VISTA': 400}
 
         # Converta a coluna 'data' para o tipo datetime
         processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])

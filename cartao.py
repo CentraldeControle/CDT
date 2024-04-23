@@ -23,6 +23,7 @@ def preprocess_data(data):
     data['quantidade'] = 1
     # Agrupar por data de filiação e franquia e calcular a contagem
     data = data.groupby(['Data filiação','Franquia','Promotor Venda Prospecção']).size().reset_index(name='quantidade')
+    
     return data
 
 def main():
@@ -51,7 +52,7 @@ def main():
         processed_data['mes'] = processed_data['Data filiação'].dt.month
 
         df_projec = processed_data.copy()
-
+        
         # Convertendo a coluna 'Data filiação' para o tipo datetime
         df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
 
@@ -75,7 +76,7 @@ def main():
 
         # Agrupando os dados por franquia e mês e somando a quantidade para cada grupo
         dados_agrupados = df_projec.groupby(['Franquia', 'Mês'])['quantidade'].sum().reset_index()
-
+        
         # Definindo a ordem dos meses
         meses_ordem = [
             'Janeiro',
@@ -260,7 +261,7 @@ def main():
 
         # Converta a coluna 'data' para o tipo datetime
         processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
-
+        
         # Calcular o total de quantidade para cada promotor no mês atual
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()
 

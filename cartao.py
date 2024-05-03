@@ -109,6 +109,9 @@ def main():
                 st.write(" ")
             else:
                 
+                 # Ordenando as franquias selecionadas em ordem alfabética
+                franquias_selecionadas.sort()
+                
                 cor_iter = iter(cores * (len(franquias_selecionadas) // len(cores) + 1))
 
                 traces = []

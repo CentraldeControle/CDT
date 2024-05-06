@@ -4,7 +4,9 @@ import numpy as np
 import datetime
 import plotly.graph_objs as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 from datetime import timedelta
+
 import os
 
 st.set_page_config(
@@ -29,19 +31,39 @@ def preprocess_data(data):
 def main():
     st.markdown("<h1 style='text-align: center;'>CDT</h1>", unsafe_allow_html=True)
 
-    # Lista todos os arquivos Excel na pasta
+    # List all Excel files in the current directory
     excel_files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
 
-    if len(excel_files) == 0:
-        st.error('Nenhum arquivo Excel encontrado na pasta.')
-    else:
-        # Seleciona o arquivo Excel mais recente
-        selected_file = max(excel_files, key=os.path.getmtime)
-        
+    # Initialize an error message and data frames list
+    error_message = ""
+    data_frames = []
 
-    if selected_file is not None:
+    if len(excel_files) < 3:
+        error_message = 'Menos de três arquivos Excel encontrados na pasta.'
+    else:
+        # Sort the files by modification time, descending
+        sorted_files = sorted(excel_files, key=lambda x: os.path.getmtime(x), reverse=True)
+        # Select the three most recent Excel files
+        selected_files = sorted_files[:3]
+
+        # Read data from each selected Excel file
+        for file_path in selected_files:
+            try:
+                # Read each Excel file into a DataFrame
+                df = pd.read_excel(file_path)
+                data_frames.append(df)
+            except Exception as e:
+                error_message = f"Failed to read {file_path}: {str(e)}"
+
+    # Comment out to prevent execution
+    st.write(selected_files)
+    # for df in data_frames:
+    #     print(df.head())  # Display the first few rows of each DataFrame
+    # print(error_message) if error_message else None
+
+    if selected_files is not None:
         # Ler o arquivo Excel
-        df = pd.read_excel(selected_file, header=0)
+        df = pd.read_excel("data.xlsx", header=0)
         
         # Pré-processamento dos dados
         processed_data = preprocess_data(df)
@@ -55,7 +77,7 @@ def main():
         
         # Convertendo a coluna 'Data filiação' para o tipo datetime
         df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
-
+        
         # Extraindo o mês da coluna 'Data filiação' e criando uma nova coluna 'Mês'
         # Mapeando os números dos meses para os nomes em português
         meses_pt_br = {
@@ -420,19 +442,12 @@ def main():
         with col4:
             st.plotly_chart(fig2,use_container_width=True,)
         
-#====================================================================================================================================================================#
-
-        # Processo de conversão da coluna 'Data Filiação' para datetime, se necessário
-        # processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
-
-
-
-
-
-
 
         # Checkbox para selecionar a data
         show_date_input = st.sidebar.checkbox('Selecionar Data')
+
+#====================================================================================================================================================================#
+
         
         st.markdown('<hr>', unsafe_allow_html=True)
 
@@ -463,6 +478,149 @@ def main():
                 return st.plotly_chart(fig4, use_container_width=True, config={'displayModeBar': False, 'displaylogo': False})
 
             plot_graph(quantidade_por_franquia, f'Vendas por Franquia em {selected_date.strftime("%d/%m/%Y")}')
+
+
+        st.markdown('<hr>', unsafe_allow_html=True)
+
+
+#====================================================================================================================================================================#
+
+
+        df_motivo = pd.read_excel("data (1).xlsx", header=0)
+
+        # Suponha que 'df_motivo' é o seu DataFrame e 'Data última desfiliação' a coluna com as datas de desfiliação
+        # Converter a coluna de data para datetime, se ainda não estiver
+        df_motivo['Data última desfiliação'] = pd.to_datetime(df_motivo['Data última desfiliação'])
+
+        # Obter o mês e ano atual
+        current_month = current_date.month
+        current_year = current_date.year
+
+        # Filtrar o DataFrame para o mês e ano atual
+        df_motivo_current = df_motivo[(df_motivo['Data última desfiliação'].dt.month == current_month) & 
+                                    (df_motivo['Data última desfiliação'].dt.year == current_year)]
+
+        # Prosseguir com a análise agrupada, como antes
+        top_motivos = df_motivo_current.groupby(['Franquia', 'Motivo última desfiliação']).size().reset_index(name='Contagem')
+        top_motivos = top_motivos.sort_values(['Franquia', 'Contagem'], ascending=[True, False]).groupby('Franquia').head(5)
+
+        # Configurar subplots para cada franquia
+        franquias = top_motivos['Franquia'].unique()
+        cols = len(franquias)
+        fig = make_subplots(rows=1, cols=cols, subplot_titles=franquias, horizontal_spacing=0.05)
+
+        # Calcular o máximo para cada franquia
+        max_counts = top_motivos.groupby('Franquia')['Contagem'].max() * 1.2  # Aumentar o máximo em 20%
+
+        # Adicionar as barras de cada franquia ao subplot correspondente
+        for i, franquia in enumerate(franquias):
+            subdata = top_motivos[top_motivos['Franquia'] == franquia]
+            fig.add_trace(go.Bar(x=subdata['Motivo última desfiliação'], y=subdata['Contagem'], orientation='v',
+                                marker=dict(color=cores[i % len(cores)]),
+                                text=subdata['Contagem'], textposition='outside'),
+                        row=1, col=i+1)
+
+            # Ajustar o eixo Y para cada subplot baseado no máximo da franquia
+            fig.update_yaxes(title_text='Número de Desfiliações', range=[0, max_counts[franquia]], row=1, col=i+1)
+
+        # Ajustar layout e escalas
+        fig.update_layout(
+            title_text="Top 5 Motivos de Desfiliação por Franquia",
+                          title={
+                                'x': 0.45,  # Centers the title horizontally
+                                'y': 1.0,  # Adjusts the vertical position if necessary
+                                'xanchor': 'center',  # Ensures the center of the title is at `x`
+                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
+                            },
+                            title_font=dict(  # This specifies the font settings for the title
+                                size=24,  # Sets the font size
+                                family='Arial, sans-serif',  # Optionally, sets the font type
+                                color='black'  # Optionally, sets the font color
+                            ),
+            showlegend=False,
+            height=600,  # Aumentada a altura do gráfico
+            width=400 * cols,  # Ajustar largura baseado no número de franquias para melhor visualização
+            margin=dict(l=50, r=100, t=50, b=150),  # Ajustar as margens do gráfico
+            font=dict(size=10)
+        )
+
+        st.plotly_chart(fig)
+
+#====================================================================================================================================================================#
+
+
+        st.markdown('<hr>', unsafe_allow_html=True)
+
+        df_prev = pd.read_excel('data (2).xlsx')
+
+        desafiliacao = df_prev.groupby('FRANQUIA')['QTD MENS CONSECUTIVA'].sum()
+
+        # Converter a série em DataFrame para melhor manipulação com Plotly
+        desafiliacao_df = desafiliacao.reset_index()
+
+        # Garantir que temos cores suficientes para cada franquia, repetir a lista se necessário
+        if len(cores) < len(desafiliacao_df):
+            cores = (cores * (len(desafiliacao_df) // len(cores) + 1))[:len(desafiliacao_df)]
+
+        # Criar um gráfico de barras com cores específicas para cada franquia
+        fig = go.Figure()
+        for i, row in desafiliacao_df.iterrows():
+            fig.add_trace(go.Bar(
+                x=[row['FRANQUIA']],
+                y=[row['QTD MENS CONSECUTIVA']],
+                name=row['FRANQUIA'],
+                marker_color=cores[i],
+                text=[row['QTD MENS CONSECUTIVA']],
+                textposition='auto'
+            ))
+
+        # Adicionar textos nas barras para mostrar os valores
+        fig.update_traces(texttemplate='%{text}', textposition='outside')
+
+        # Ajustar o limite do eixo Y
+        fig.update_layout(title_text="Previsão de desfiliação",
+                          title={
+                                'x': 0.5,  # Centers the title horizontally
+                                'y': 0.9,  # Adjusts the vertical position if necessary
+                                'xanchor': 'center',  # Ensures the center of the title is at `x`
+                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
+                            },
+                            title_font=dict(  # This specifies the font settings for the title
+                                size=24,  # Sets the font size
+                                family='Arial, sans-serif',  # Optionally, sets the font type
+                                color='black'  # Optionally, sets the font color
+                            ),yaxis=dict(range=[0, desafiliacao.max() * 1.2]))
+
+        # Tentativa de adicionar uma legenda, mesmo não sendo típico para este tipo de gráfico
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers',
+                                marker=dict(size=10, color="Red"),
+                                legendgroup='group', showlegend=True, name='Régua 6'))
+
+        # Configurações finais do layout
+        fig.update_layout(showlegend=False,
+                        height=600,
+                        width=700,
+                        annotations=[
+                dict(
+                    text="Régua 6",  # Texto da anotação
+                    xref="paper", yref="paper",  # Usar referências de posição relativa ao gráfico
+                    x=0.10, y=0.95,  # Posição da anotação no gráfico
+                    showarrow=True,  # Não mostrar seta
+                    arrowhead=1,  # Tipo de cabeça da seta (1 é padrão)
+                    arrowsize=1,  # Tamanho da seta
+                    arrowwidth=2,  # Largura da seta
+                    arrowcolor="black",  # Cor da seta
+                    font=dict(size=16, color="black"),  # Configurações de fonte
+                    bgcolor="white",  # Cor de fundo da anotação
+                    bordercolor="black",  # Cor da borda da anotação
+                    borderpad=4  # Espaçamento da borda
+                )
+            ]
+        )
+
+        # Mostrar o gráfico
+        st.plotly_chart(fig)
+
 
 if __name__ == "__main__":
     main()

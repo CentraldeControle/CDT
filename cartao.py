@@ -450,9 +450,11 @@ def main():
 #====================================================================================================================================================================#
 
         
-        st.markdown('<hr>', unsafe_allow_html=True)
 
         if show_date_input:
+
+            st.markdown('<hr>', unsafe_allow_html=True)
+            
             # Sidebar para selecionar a data
             selected_date = st.sidebar.date_input('Selecione uma data', min_value=df_projec['Data filiação'].min(), max_value=df_projec['Data filiação'].max(), value=df_projec['Data filiação'].max())
 

@@ -57,7 +57,7 @@ def main():
                 error_message = f"Failed to read {file_path}: {str(e)}"
 
     # Comment out to prevent execution
-    st.write(selected_files)
+    # st.write(selected_files)
     # for df in data_frames:
     #     print(df.head())  # Display the first few rows of each DataFrame
     # print(error_message) if error_message else None

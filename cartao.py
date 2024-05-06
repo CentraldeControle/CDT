@@ -539,7 +539,7 @@ def main():
                                 color='black'  # Optionally, sets the font color
                             ),
             showlegend=False,
-            height=600,  # Aumentada a altura do gráfico
+            height=500,  # Aumentada a altura do gráfico
             width=400 * cols,  # Ajustar largura baseado no número de franquias para melhor visualização
             margin=dict(l=50, r=100, t=50, b=150),  # Ajustar as margens do gráfico
             font=dict(size=10)

@@ -221,7 +221,7 @@ def main():
             ultimo_dia_mes_atual = data_atual.replace(day=1, month=data_atual.month % 12 + 1) - timedelta(days=1)
             
             # Calcula quantos dias faltam para o fim do mês
-            dias_restantes = (ultimo_dia_mes_atual - data_atual).days + 1
+            dias_restantes = (ultimo_dia_mes_atual - data_atual).days -1
             
             # Calcula quantos dias passaram desde o primeiro dia do mês até a data atual, excluindo domingos
             dias_passados = sum(1 for i in range((data_atual - primeiro_dia_mes_atual).days + 1) if (primeiro_dia_mes_atual + timedelta(days=i)).weekday() != 6)

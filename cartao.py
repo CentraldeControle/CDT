@@ -625,5 +625,91 @@ def main():
         st.plotly_chart(fig)
 
 
+#====================================================================================================================================================================#
+
+        st.markdown('<hr>', unsafe_allow_html=True)
+                # Adicionar as barras de cada franquia ao subplot correspondente
+
+        # Criando uma nova coluna 'Ano' e 'Mês' para facilitar a seleção
+        processed_data['Ano'] = processed_data['Data filiação'].dt.year
+        processed_data['Mês'] = processed_data['Data filiação'].dt.month
+
+        # Obtendo o ano e mês atual
+        ano_atual = datetime.datetime.now().year
+        mes_atual = datetime.datetime.now().month
+
+        # Filtrando o DataFrame pelo mês atual
+        dados_mes_atual = processed_data[(processed_data['Ano'] == ano_atual) & (processed_data['Mês'] == mes_atual)]
+
+        # Filtrando os dados por franquia
+        franquias = sorted(dados_mes_atual['Franquia'].unique())
+
+        # Criando uma figura com 4 subplots em uma única linha
+        fig = make_subplots(
+            rows=1, 
+            cols=4, 
+            subplot_titles=[f'Franquia {franquia}' for franquia in franquias],
+            horizontal_spacing=0.05  # Espaçamento horizontal entre os gráficos
+        )
+
+        # Variáveis para posição dos subplots
+        positions = [(1, 1), (1, 2), (1, 3), (1, 4)]
+
+
+
+        # Adicionando cada gráfico no subplot correspondente
+        for i, franquia in enumerate(franquias):
+            dados_franquia = dados_mes_atual[dados_mes_atual['Franquia'] == franquia]
+            
+            # Agrupando por Promotor e somando as quantidades
+            total_vendas_por_promotor = dados_franquia.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+
+            # Ordenando e pegando os top 5 promotores
+            top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
+            
+            # Criando o gráfico de barras
+            barra = go.Bar(
+                x=top_5_vendedores['Promotor Venda Prospecção'],
+                y=top_5_vendedores['quantidade'],
+                text=top_5_vendedores['quantidade'],
+                textposition='outside',
+                marker_color=cores[i % len(cores)]
+            )
+            
+            # Adicionando o gráfico ao subplot
+            row, col = positions[i]
+            fig.add_trace(barra, row=row, col=col)
+
+            # Ajustando o layout do subplot
+            fig.update_xaxes(title_text='Promotor', row=row, col=col)
+            fig.update_yaxes(title_text='Total de Vendas', row=row, col=col)
+                # Ajustando o layout do subplot para garantir que o texto não seja cortado
+            max_y = top_5_vendedores['quantidade'].max()
+            fig.update_yaxes(range=[0, max_y * 1.3], row=row, col=col)
+
+        # Atualizando o layout geral da figura
+        fig.update_layout(
+            title_text=f'Top 5 Promotores de Venda - Mês {mes_atual}/{ano_atual}',
+            title={
+                                'x': 0.45,  # Centers the title horizontally
+                                'y': 1.0,  # Adjusts the vertical position if necessary
+                                'xanchor': 'center',  # Ensures the center of the title is at `x`
+                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
+                            },
+                            title_font=dict(  # This specifies the font settings for the title
+                                size=24,  # Sets the font size
+                                family='Arial, sans-serif',  # Optionally, sets the font type
+                                color='black'  # Optionally, sets the font color
+                            ), 
+            showlegend=False,
+            height=500,  # Altura total da figura
+            width=1600,  # Largura total da figura para acomodar os 4 gráficos lado a lado
+            
+            
+        )
+
+        # Exibindo a figura com Streamlit
+        st.plotly_chart(fig)
+
 if __name__ == "__main__":
     main()

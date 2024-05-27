@@ -555,7 +555,7 @@ def main():
         st.markdown('<hr>', unsafe_allow_html=True)
 
         df_prev = pd.read_excel('data (2).xlsx')
-
+        
         desafiliacao = df_prev.groupby('FRANQUIA')['QTD MENS CONSECUTIVA'].sum()
 
         # Converter a série em DataFrame para melhor manipulação com Plotly

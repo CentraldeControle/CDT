@@ -332,7 +332,7 @@ def main():
                     meta_restante_arredondada = round(row['meta_restante'])
 
                     # Adicionar um texto indicando a meta restante
-                    fig.add_annotation(x=0.5, y=0.3,
+                    fig.add_annotation(x=0.5, y=0.25,
                                         text=f"Projeção : {meta_restante_arredondada}",
                                         showarrow=False,
                                         font=dict(size=14))

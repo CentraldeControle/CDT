@@ -199,7 +199,7 @@ def main():
 
         # Calcular o total de quantidade para cada promotor
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()
-
+        
 
         def calcular_meta_restante(df_total_por_promotor, processed_data):
             # Obtém a data atual
@@ -703,13 +703,47 @@ def main():
                             ), 
             showlegend=False,
             height=500,  # Altura total da figura
-            width=1600,  # Largura total da figura para acomodar os 4 gráficos lado a lado
+            width=400 * cols,  # Largura total da figura para acomodar os 4 gráficos lado a lado
             
             
         )
 
         # Exibindo a figura com Streamlit
         st.plotly_chart(fig)
+
+
+
+        data_atual = datetime.date.today() - timedelta(days=1)
+
+        # Calcular o total de dias úteis até a data atual excluindo os domingos
+        dias_totais = pd.date_range(start='2024-01-01', end=data_atual)
+        # Filtrar para remover os domingos
+        dias_uteis = dias_totais[~dias_totais.weekday.isin([6])]
+        
+        # Somar as quantidades para cada franquia
+        total_vendas = dados_agrupados.groupby('Franquia')['quantidade'].sum()
+        
+        # Calcular a média diária excluindo apenas os domingos
+        media_diaria = total_vendas / len(dias_uteis)
+        
+        # Converter para DataFrame
+        media_diaria = media_diaria.reset_index(name='Média Diária')
+        
+        # Criar o gráfico de barras com as médias diárias
+        fig6 = px.bar(media_diaria, x='Franquia', y='Média Diária', 
+                      text='Média Diária', 
+                      title='Média Diária de Vendas por Franquia em 2024 (Até Ontém, excluindo domingos)',
+                      color = 'Franquia',
+                      color_discrete_sequence=cores)
+
+        # Atualizar layout para exibir os valores em cima das barras
+        fig6.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+        fig6.update_layout(yaxis=dict(range=[0, media_diaria['Média Diária'].max() * 1.1]))
+
+        st.plotly_chart(fig6)
+
+
+
 
 if __name__ == "__main__":
     main()

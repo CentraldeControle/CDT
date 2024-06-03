@@ -121,7 +121,7 @@ def main():
 
         # Ordenando os dados pela ordem definida
         dados_agrupados = dados_agrupados.sort_values(by='Mês')
-        
+         
         # Definindo uma paleta de cores
         cores = ['#007bff', '#ffc107', '#28a745', '#17a2b8', '#ffc885']
         
@@ -447,6 +447,102 @@ def main():
         # Checkbox para selecionar a data
         show_date_input = st.sidebar.checkbox('Selecionar Data')
 
+
+
+
+
+
+
+
+
+#====================================================================================================================================================================#
+# Resultados dos colaboradore do mês anterior
+        
+        # Criando uma nova coluna 'Ano' e 'Mês' para facilitar a seleção
+        processed_data['Ano'] = processed_data['Data filiação'].dt.year
+        processed_data['Mês'] = processed_data['Data filiação'].dt.month
+
+        # Obtendo o ano e mês atual
+        
+        mes_atual = current_date.month
+        ano_atual = current_date.year
+
+        # Calculando o mês e ano do mês passado
+        if mes_atual == 1:
+            mes_passado = 12
+            ano_passado = ano_atual - 1
+        else:
+            mes_passado = mes_atual - 1
+            ano_passado = ano_atual
+
+        # Filtrando o DataFrame pelo mês passado
+        dados_mes_passado = processed_data[(processed_data['Ano'] == ano_passado) & (processed_data['Mês'] == mes_passado)]
+
+        # Filtrando os dados por franquia
+        franquias = sorted(dados_mes_passado['Franquia'].unique())
+
+        # Verificando o número de franquias para ajustar o número de colunas
+        cols = min(4, len(franquias))
+
+        # Criando uma figura com subplots em uma única linha
+        fig = make_subplots(
+            rows=1, 
+            cols=cols, 
+            subplot_titles=[f'Franquia {franquia}' for franquia in franquias[:cols]],
+            horizontal_spacing=0.05  # Espaçamento horizontal entre os gráficos
+        )
+
+        # Adicionando cada gráfico no subplot correspondente
+        for i, franquia in enumerate(franquias[:cols]):
+            dados_franquia = dados_mes_passado[dados_mes_passado['Franquia'] == franquia]
+            
+            # Agrupando por Promotor e somando as quantidades
+            total_vendas_por_promotor = dados_franquia.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+
+            # Ordenando e pegando os top 5 promotores
+            top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
+            
+            # Criando o gráfico de barras
+            barra = go.Bar(
+                x=top_5_vendedores['Promotor Venda Prospecção'],
+                y=top_5_vendedores['quantidade'],
+                text=top_5_vendedores['quantidade'],
+                textposition='outside',
+                marker_color=cores[i % len(cores)]  # Pode ajustar as cores conforme necessário
+            )
+            
+            # Adicionando o gráfico ao subplot
+            fig.add_trace(barra, row=1, col=i+1)
+
+            # Ajustando o layout do subplot
+            fig.update_xaxes(title_text='Promotor', row=1, col=i+1)
+            fig.update_yaxes(title_text='Total de Vendas', row=1, col=i+1)
+            
+            # Ajustando o layout do subplot para garantir que o texto não seja cortado
+            max_y = top_5_vendedores['quantidade'].max()
+            fig.update_yaxes(range=[0, max_y * 1.3], row=1, col=i+1)
+
+        # Atualizando o layout geral da figura
+        fig.update_layout(
+            title_text=f'Top 5 Promotores de Venda - Mês {mes_passado}/{ano_passado}',
+            title={
+                'x': 0.45,  # Centers the title horizontally
+                'y': 1.0,  # Adjusts the vertical position if necessary
+                'xanchor': 'center',  # Ensures the center of the title is at `x`
+                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
+            },
+            title_font=dict(  # This specifies the font settings for the title
+                size=24,  # Sets the font size
+                family='Arial, sans-serif',  # Optionally, sets the font type
+                color='black'  # Optionally, sets the font color
+            ),
+            showlegend=False,
+            height=500,  # Altura total da figura
+            width=400 * cols,  # Largura total da figura para acomodar os 4 gráficos lado a lado
+        )
+
+        # Exibindo a figura com Streamlit
+        st.plotly_chart(fig)
 #====================================================================================================================================================================#
 
         
@@ -485,144 +581,6 @@ def main():
 
         st.markdown('<hr>', unsafe_allow_html=True)
 
-
-#====================================================================================================================================================================#
-
-
-        df_motivo = pd.read_excel("data (1).xlsx", header=0)
-
-        # Suponha que 'df_motivo' é o seu DataFrame e 'Data última desfiliação' a coluna com as datas de desfiliação
-        # Converter a coluna de data para datetime, se ainda não estiver
-        df_motivo['Data última desfiliação'] = pd.to_datetime(df_motivo['Data última desfiliação'])
-
-        # Obter o mês e ano atual
-        current_month = current_date.month
-        current_year = current_date.year
-
-        # Filtrar o DataFrame para o mês e ano atual
-        df_motivo_current = df_motivo[(df_motivo['Data última desfiliação'].dt.month == current_month) & 
-                                    (df_motivo['Data última desfiliação'].dt.year == current_year)]
-
-        # Prosseguir com a análise agrupada, como antes
-        top_motivos = df_motivo_current.groupby(['Franquia', 'Motivo última desfiliação']).size().reset_index(name='Contagem')
-        top_motivos = top_motivos.sort_values(['Franquia', 'Contagem'], ascending=[True, False]).groupby('Franquia').head(5)
-
-        # Configurar subplots para cada franquia
-        franquias = top_motivos['Franquia'].unique()
-        cols = len(franquias)
-        fig = make_subplots(rows=1, cols=cols, subplot_titles=franquias, horizontal_spacing=0.05)
-
-        # Calcular o máximo para cada franquia
-        max_counts = top_motivos.groupby('Franquia')['Contagem'].max() * 1.2  # Aumentar o máximo em 20%
-
-        # Adicionar as barras de cada franquia ao subplot correspondente
-        for i, franquia in enumerate(franquias):
-            subdata = top_motivos[top_motivos['Franquia'] == franquia]
-            fig.add_trace(go.Bar(x=subdata['Motivo última desfiliação'], y=subdata['Contagem'], orientation='v',
-                                marker=dict(color=cores[i % len(cores)]),
-                                text=subdata['Contagem'], textposition='outside'),
-                        row=1, col=i+1)
-
-            # Ajustar o eixo Y para cada subplot baseado no máximo da franquia
-            fig.update_yaxes(title_text='Número de Desfiliações', range=[0, max_counts[franquia]], row=1, col=i+1)
-
-        # Ajustar layout e escalas
-        fig.update_layout(
-            title_text="Top 5 Motivos de Desfiliação por Franquia",
-                          title={
-                                'x': 0.45,  # Centers the title horizontally
-                                'y': 1.0,  # Adjusts the vertical position if necessary
-                                'xanchor': 'center',  # Ensures the center of the title is at `x`
-                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
-                            },
-                            title_font=dict(  # This specifies the font settings for the title
-                                size=24,  # Sets the font size
-                                family='Arial, sans-serif',  # Optionally, sets the font type
-                                color='black'  # Optionally, sets the font color
-                            ),
-            showlegend=False,
-            height=500,  # Aumentada a altura do gráfico
-            width=400 * cols,  # Ajustar largura baseado no número de franquias para melhor visualização
-            margin=dict(l=50, r=100, t=50, b=150),  # Ajustar as margens do gráfico
-            font=dict(size=10)
-        )
-
-        st.plotly_chart(fig)
-
-#====================================================================================================================================================================#
-
-
-        st.markdown('<hr>', unsafe_allow_html=True)
-
-        df_prev = pd.read_excel('data (2).xlsx')
-        
-        desafiliacao = df_prev.groupby('FRANQUIA')['QTD MENS CONSECUTIVA'].sum()
-
-        # Converter a série em DataFrame para melhor manipulação com Plotly
-        desafiliacao_df = desafiliacao.reset_index()
-
-        # Garantir que temos cores suficientes para cada franquia, repetir a lista se necessário
-        if len(cores) < len(desafiliacao_df):
-            cores = (cores * (len(desafiliacao_df) // len(cores) + 1))[:len(desafiliacao_df)]
-
-        # Criar um gráfico de barras com cores específicas para cada franquia
-        fig = go.Figure()
-        for i, row in desafiliacao_df.iterrows():
-            fig.add_trace(go.Bar(
-                x=[row['FRANQUIA']],
-                y=[row['QTD MENS CONSECUTIVA']],
-                name=row['FRANQUIA'],
-                marker_color=cores[i],
-                text=[row['QTD MENS CONSECUTIVA']],
-                textposition='auto'
-            ))
-
-        # Adicionar textos nas barras para mostrar os valores
-        fig.update_traces(texttemplate='%{text}', textposition='outside')
-
-        # Ajustar o limite do eixo Y
-        fig.update_layout(title_text="Previsão de desfiliação",
-                          title={
-                                'x': 0.5,  # Centers the title horizontally
-                                'y': 0.9,  # Adjusts the vertical position if necessary
-                                'xanchor': 'center',  # Ensures the center of the title is at `x`
-                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
-                            },
-                            title_font=dict(  # This specifies the font settings for the title
-                                size=24,  # Sets the font size
-                                family='Arial, sans-serif',  # Optionally, sets the font type
-                                color='black'  # Optionally, sets the font color
-                            ),yaxis=dict(range=[0, desafiliacao.max() * 1.2]))
-
-        # Tentativa de adicionar uma legenda, mesmo não sendo típico para este tipo de gráfico
-        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers',
-                                marker=dict(size=10, color="Red"),
-                                legendgroup='group', showlegend=True, name='Régua 6'))
-
-        # Configurações finais do layout
-        fig.update_layout(showlegend=False,
-                        height=600,
-                        width=700,
-                        annotations=[
-                dict(
-                    text="Régua 6",  # Texto da anotação
-                    xref="paper", yref="paper",  # Usar referências de posição relativa ao gráfico
-                    x=0.10, y=0.95,  # Posição da anotação no gráfico
-                    showarrow=True,  # Não mostrar seta
-                    arrowhead=1,  # Tipo de cabeça da seta (1 é padrão)
-                    arrowsize=1,  # Tamanho da seta
-                    arrowwidth=2,  # Largura da seta
-                    arrowcolor="black",  # Cor da seta
-                    font=dict(size=16, color="black"),  # Configurações de fonte
-                    bgcolor="white",  # Cor de fundo da anotação
-                    bordercolor="black",  # Cor da borda da anotação
-                    borderpad=4  # Espaçamento da borda
-                )
-            ]
-        )
-
-        # Mostrar o gráfico
-        st.plotly_chart(fig)
 
 
 #====================================================================================================================================================================#
@@ -867,6 +825,148 @@ def main():
 
         # Exibindo a figura com Streamlit (substitua st.plotly_chart(fig) pela função apropriada no seu ambiente)
         st.plotly_chart(fig)
+
+
+
+#====================================================================================================================================================================#
+
+
+        df_motivo = pd.read_excel("data (1).xlsx", header=0)
+
+        # Suponha que 'df_motivo' é o seu DataFrame e 'Data última desfiliação' a coluna com as datas de desfiliação
+        # Converter a coluna de data para datetime, se ainda não estiver
+        df_motivo['Data última desfiliação'] = pd.to_datetime(df_motivo['Data última desfiliação'])
+
+        # Obter o mês e ano atual
+        current_month = current_date.month
+        current_year = current_date.year
+
+        # Filtrar o DataFrame para o mês e ano atual
+        df_motivo_current = df_motivo[(df_motivo['Data última desfiliação'].dt.month == current_month) & 
+                                    (df_motivo['Data última desfiliação'].dt.year == current_year)]
+
+        # Prosseguir com a análise agrupada, como antes
+        top_motivos = df_motivo_current.groupby(['Franquia', 'Motivo última desfiliação']).size().reset_index(name='Contagem')
+        top_motivos = top_motivos.sort_values(['Franquia', 'Contagem'], ascending=[True, False]).groupby('Franquia').head(5)
+
+        # Configurar subplots para cada franquia
+        franquias = top_motivos['Franquia'].unique()
+        cols = len(franquias)
+        fig = make_subplots(rows=1, cols=cols, subplot_titles=franquias, horizontal_spacing=0.05)
+
+        # Calcular o máximo para cada franquia
+        max_counts = top_motivos.groupby('Franquia')['Contagem'].max() * 1.2  # Aumentar o máximo em 20%
+
+        # Adicionar as barras de cada franquia ao subplot correspondente
+        for i, franquia in enumerate(franquias):
+            subdata = top_motivos[top_motivos['Franquia'] == franquia]
+            fig.add_trace(go.Bar(x=subdata['Motivo última desfiliação'], y=subdata['Contagem'], orientation='v',
+                                marker=dict(color=cores[i % len(cores)]),
+                                text=subdata['Contagem'], textposition='outside'),
+                        row=1, col=i+1)
+
+            # Ajustar o eixo Y para cada subplot baseado no máximo da franquia
+            fig.update_yaxes(title_text='Número de Desfiliações', range=[0, max_counts[franquia]], row=1, col=i+1)
+
+        # Ajustar layout e escalas
+        fig.update_layout(
+            title_text="Top 5 Motivos de Desfiliação por Franquia",
+                          title={
+                                'x': 0.45,  # Centers the title horizontally
+                                'y': 1.0,  # Adjusts the vertical position if necessary
+                                'xanchor': 'center',  # Ensures the center of the title is at `x`
+                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
+                            },
+                            title_font=dict(  # This specifies the font settings for the title
+                                size=24,  # Sets the font size
+                                family='Arial, sans-serif',  # Optionally, sets the font type
+                                color='black'  # Optionally, sets the font color
+                            ),
+            showlegend=False,
+            height=500,  # Aumentada a altura do gráfico
+            width=400 * cols,  # Ajustar largura baseado no número de franquias para melhor visualização
+            margin=dict(l=50, r=100, t=50, b=150),  # Ajustar as margens do gráfico
+            font=dict(size=10)
+        )
+
+        st.plotly_chart(fig)
+
+#====================================================================================================================================================================#
+
+
+        st.markdown('<hr>', unsafe_allow_html=True)
+
+        df_prev = pd.read_excel('data (2).xlsx')
+        
+        desafiliacao = df_prev.groupby('FRANQUIA')['QTD MENS CONSECUTIVA'].sum()
+
+        # Converter a série em DataFrame para melhor manipulação com Plotly
+        desafiliacao_df = desafiliacao.reset_index()
+
+        # Garantir que temos cores suficientes para cada franquia, repetir a lista se necessário
+        if len(cores) < len(desafiliacao_df):
+            cores = (cores * (len(desafiliacao_df) // len(cores) + 1))[:len(desafiliacao_df)]
+
+        # Criar um gráfico de barras com cores específicas para cada franquia
+        fig = go.Figure()
+        for i, row in desafiliacao_df.iterrows():
+            fig.add_trace(go.Bar(
+                x=[row['FRANQUIA']],
+                y=[row['QTD MENS CONSECUTIVA']],
+                name=row['FRANQUIA'],
+                marker_color=cores[i],
+                text=[row['QTD MENS CONSECUTIVA']],
+                textposition='auto'
+            ))
+
+        # Adicionar textos nas barras para mostrar os valores
+        fig.update_traces(texttemplate='%{text}', textposition='outside')
+
+        # Ajustar o limite do eixo Y
+        fig.update_layout(title_text="Previsão de desfiliação",
+                          title={
+                                'x': 0.5,  # Centers the title horizontally
+                                'y': 0.9,  # Adjusts the vertical position if necessary
+                                'xanchor': 'center',  # Ensures the center of the title is at `x`
+                                'yanchor': 'top'  # Anchors the title at the top if `y` is adjusted
+                            },
+                            title_font=dict(  # This specifies the font settings for the title
+                                size=24,  # Sets the font size
+                                family='Arial, sans-serif',  # Optionally, sets the font type
+                                color='black'  # Optionally, sets the font color
+                            ),yaxis=dict(range=[0, desafiliacao.max() * 1.2]))
+
+        # Tentativa de adicionar uma legenda, mesmo não sendo típico para este tipo de gráfico
+        fig.add_trace(go.Scatter(x=[None], y=[None], mode='markers',
+                                marker=dict(size=10, color="Red"),
+                                legendgroup='group', showlegend=True, name='Régua 6'))
+
+        # Configurações finais do layout
+        fig.update_layout(showlegend=False,
+                        height=600,
+                        width=700,
+                        annotations=[
+                dict(
+                    text="Régua 6",  # Texto da anotação
+                    xref="paper", yref="paper",  # Usar referências de posição relativa ao gráfico
+                    x=0.10, y=0.95,  # Posição da anotação no gráfico
+                    showarrow=True,  # Não mostrar seta
+                    arrowhead=1,  # Tipo de cabeça da seta (1 é padrão)
+                    arrowsize=1,  # Tamanho da seta
+                    arrowwidth=2,  # Largura da seta
+                    arrowcolor="black",  # Cor da seta
+                    font=dict(size=16, color="black"),  # Configurações de fonte
+                    bgcolor="white",  # Cor de fundo da anotação
+                    bordercolor="black",  # Cor da borda da anotação
+                    borderpad=4  # Espaçamento da borda
+                )
+            ]
+        )
+
+        # Mostrar o gráfico
+        st.plotly_chart(fig)
+
+
 
 
 

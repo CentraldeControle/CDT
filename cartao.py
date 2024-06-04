@@ -704,55 +704,7 @@ def main():
 
 
 
-        # Prosseguir com a análise agrupada, como antes
-        top_motivos = df_motivo.groupby(['Franquia', 'Motivo última desfiliação']).size().reset_index(name='Contagem')
-        top_motivos = top_motivos.sort_values(['Franquia', 'Contagem'], ascending=[True, False]).groupby('Franquia').head(5)
-
-        # Configurar subplots para cada franquia
-        franquias = top_motivos['Franquia'].unique()
-        cols = len(franquias)
-        fig = make_subplots(rows=1, cols=cols, subplot_titles=franquias, horizontal_spacing=0.05)
-
-        # Calcular o máximo para cada franquia
-        max_counts = top_motivos.groupby('Franquia')['Contagem'].max() * 1.2  # Aumentar o máximo em 20%
-
-
-
-        # Adicionar as barras de cada franquia ao subplot correspondente
-        for i, franquia in enumerate(franquias):
-            subdata = top_motivos[top_motivos['Franquia'] == franquia]
-            fig.add_trace(go.Bar(x=subdata['Motivo última desfiliação'], y=subdata['Contagem'], orientation='v',
-                                marker=dict(color=cores[i % len(cores)]),
-                                text=subdata['Contagem'], textposition='outside'),
-                        row=1, col=i+1)
-
-            # Ajustar o eixo Y para cada subplot baseado no máximo da franquia
-            fig.update_yaxes(title_text='Número de Desfiliações', range=[0, max_counts[franquia]], row=1, col=i+1)
-
-        # Ajustar layout e escalas
-        fig.update_layout(
-            title_text="Top 5 Motivos de Desfiliação por Franquia",
-            title={
-                'x': 0.45,  # Centraliza o título horizontalmente
-                'y': 1.0,  # Ajusta a posição vertical se necessário
-                'xanchor': 'center',  # Garante que o centro do título esteja em `x`
-                'yanchor': 'top'  # Ancora o título no topo se `y` for ajustado
-            },
-            title_font=dict(  # Especifica as configurações de fonte para o título
-                size=24,  # Define o tamanho da fonte
-                family='Arial, sans-serif',  # Opcionalmente, define o tipo de fonte
-                color='black'  # Opcionalmente, define a cor da fonte
-            ),
-            showlegend=False,
-            height=500,  # Aumenta a altura do gráfico
-            width=400 * cols,  # Ajusta a largura com base no número de franquias para melhor visualização
-            margin=dict(l=50, r=100, t=50, b=150),  # Ajusta as margens do gráfico
-            font=dict(size=10)
-        )
-
-        # Exibir o gráfico com o Streamlit (substitua st.plotly_chart(fig) pela função apropriada no seu ambiente)
-        st.plotly_chart(fig)
-
+       
 
 
 
@@ -890,6 +842,57 @@ def main():
         )
 
         st.plotly_chart(fig)
+
+
+         # Prosseguir com a análise agrupada, como antes
+        top_motivos = df_motivo.groupby(['Franquia', 'Motivo última desfiliação']).size().reset_index(name='Contagem')
+        top_motivos = top_motivos.sort_values(['Franquia', 'Contagem'], ascending=[True, False]).groupby('Franquia').head(5)
+
+        # Configurar subplots para cada franquia
+        franquias = top_motivos['Franquia'].unique()
+        cols = len(franquias)
+        fig = make_subplots(rows=1, cols=cols, subplot_titles=franquias, horizontal_spacing=0.05)
+
+        # Calcular o máximo para cada franquia
+        max_counts = top_motivos.groupby('Franquia')['Contagem'].max() * 1.2  # Aumentar o máximo em 20%
+
+
+
+        # Adicionar as barras de cada franquia ao subplot correspondente
+        for i, franquia in enumerate(franquias):
+            subdata = top_motivos[top_motivos['Franquia'] == franquia]
+            fig.add_trace(go.Bar(x=subdata['Motivo última desfiliação'], y=subdata['Contagem'], orientation='v',
+                                marker=dict(color=cores[i % len(cores)]),
+                                text=subdata['Contagem'], textposition='outside'),
+                        row=1, col=i+1)
+
+            # Ajustar o eixo Y para cada subplot baseado no máximo da franquia
+            fig.update_yaxes(title_text='Número de Desfiliações', range=[0, max_counts[franquia]], row=1, col=i+1)
+
+        # Ajustar layout e escalas
+        fig.update_layout(
+            title_text="Top 5 Motivos de Desfiliação por Franquia",
+            title={
+                'x': 0.45,  # Centraliza o título horizontalmente
+                'y': 1.0,  # Ajusta a posição vertical se necessário
+                'xanchor': 'center',  # Garante que o centro do título esteja em `x`
+                'yanchor': 'top'  # Ancora o título no topo se `y` for ajustado
+            },
+            title_font=dict(  # Especifica as configurações de fonte para o título
+                size=24,  # Define o tamanho da fonte
+                family='Arial, sans-serif',  # Opcionalmente, define o tipo de fonte
+                color='black'  # Opcionalmente, define a cor da fonte
+            ),
+            showlegend=False,
+            height=500,  # Aumenta a altura do gráfico
+            width=400 * cols,  # Ajusta a largura com base no número de franquias para melhor visualização
+            margin=dict(l=50, r=100, t=50, b=150),  # Ajusta as margens do gráfico
+            font=dict(size=10)
+        )
+
+        # Exibir o gráfico com o Streamlit (substitua st.plotly_chart(fig) pela função apropriada no seu ambiente)
+        st.plotly_chart(fig)
+
 
 #====================================================================================================================================================================#
 

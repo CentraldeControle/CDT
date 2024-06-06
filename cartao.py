@@ -704,8 +704,90 @@ def main():
 
 
 
-       
+        processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
 
+        # Filtrar os dados para a unidade de Caldas Novas
+        dados_caldas_novas = processed_data[processed_data['Franquia'] == 'CALDAS NOVAS']
+
+        # Filtrar os dados dos últimos 3 meses
+        data_limite = pd.Timestamp.today() - pd.DateOffset(months=3)
+        dados_caldas_novas_ultimos_3_meses = dados_caldas_novas[dados_caldas_novas['Data filiação'] >= data_limite]
+
+        # Criando a figura com subplots para cada um dos 3 meses
+        fig = make_subplots(
+            rows=1,
+            cols=3,
+            subplot_titles=[
+                'Junho',
+                'Maio',
+                'Abril'
+            ],
+            horizontal_spacing=0.08  # Espaçamento horizontal entre os gráficos
+        )
+
+        # Função para filtrar dados por mês e gerar gráfico de barras
+        def add_mes_subplot(mes_offset, col):
+            # Calcula o mês de interesse
+            mes_inicio = pd.Timestamp.today().replace(day=1) - pd.DateOffset(months=mes_offset)
+            mes_fim = mes_inicio + pd.DateOffset(months=1)
+            
+            # Filtra os dados para o mês de interesse
+            dados_mes = dados_caldas_novas_ultimos_3_meses[
+                (dados_caldas_novas_ultimos_3_meses['Data filiação'] >= mes_inicio) &
+                (dados_caldas_novas_ultimos_3_meses['Data filiação'] < mes_fim)
+            ]
+            
+            # Agrupando por Promotor e somando as quantidades
+            total_vendas_por_promotor = dados_mes.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+            
+            # Ordenando e pegando os top 5 promotores
+            top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
+            
+            # Criando o gráfico de barras
+            barra = go.Bar(
+                x=top_5_vendedores['Promotor Venda Prospecção'],
+                y=top_5_vendedores['quantidade'],
+                text=top_5_vendedores['quantidade'],
+                textposition='outside',
+                marker_color=cores  # Pode alterar a cor conforme preferir
+            )
+            
+            # Adicionando o gráfico ao subplot
+            fig.add_trace(barra, row=1, col=col)
+            
+            # Ajustando o layout do subplot
+            fig.update_xaxes(title_text='Promotor', row=1, col=col)
+            fig.update_yaxes(title_text='Total de Vendas', row=1, col=col)
+            if not top_5_vendedores['quantidade'].empty:
+                max_y = top_5_vendedores['quantidade'].max()
+                fig.update_yaxes(range=[0, max_y * 1.3], row=1, col=col)
+
+        # Adicionando subplots para cada um dos 3 meses
+        add_mes_subplot(0, 1)  # Mês atual
+        add_mes_subplot(1, 2)  # 1 mês atrás
+        add_mes_subplot(2, 3)  # 2 meses atrás
+
+        # Atualizando o layout geral da figura
+        fig.update_layout(
+            title_text='Top 5 Promotores de Venda da Unidade Caldas Novas dos Últimos 3 Meses',
+            title={
+                'x': 0.5,  # Centraliza o título horizontalmente
+                'y': 0.9,  # Ajusta a posição vertical se necessário
+                'xanchor': 'center',  # Garante que o centro do título esteja em `x`
+                'yanchor': 'top'  # Ancora o título no topo se `y` for ajustado
+            },
+            title_font=dict(
+                size=24,
+                family='Arial, sans-serif',
+                color='black'
+            ),
+            showlegend=False,
+            height=500,
+            width=1200  # Ajusta a largura conforme necessário
+        )
+
+        # Exibindo a figura com Streamlit (substitua st.plotly_chart(fig) pela função apropriada no seu ambiente)
+        st.plotly_chart(fig)
 
 
 

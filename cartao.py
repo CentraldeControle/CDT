@@ -6,6 +6,7 @@ import plotly.graph_objs as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 from datetime import timedelta
+from dateutil.relativedelta import relativedelta
 
 import os
 
@@ -96,20 +97,22 @@ def main():
             12: 'Dezembro'
         }
 
-        # Calculating the date five months ago from today
-        today = datetime.datetime.now()
-        five_months_ago = today - timedelta(days=120)
+        # Calculando o primeiro dia do mês atual
+        hoje = datetime.datetime.now().replace(day=1)
 
-        # Filter the data to include only the last five months
-        df_last_five_months = df_projec[df_projec['Data filiação'] >= five_months_ago]
+        # Calculando o primeiro dia do mês 5 meses atrás
+        cinco_meses_atras = hoje - relativedelta(months=4)
 
-        # Add a 'Mês' column to the filtered data
-        df_last_five_months['Mês'] = df_last_five_months['Data filiação'].dt.month.map(meses_pt_br)
+        # Filtrar os dados para incluir apenas os últimos 5 meses completos
+        df_ultimos_cinco_meses = df_projec[df_projec['Data filiação'] >= cinco_meses_atras]
 
-        # Grouping the data by franchise and month and summing the quantity for each group
-        dados_agrupados = df_last_five_months.groupby(['Franquia', 'Mês'])['quantidade'].sum().reset_index()
+        # Adicionando a coluna 'Mês' com os nomes em português
+        df_ultimos_cinco_meses['Mês'] = df_ultimos_cinco_meses['Data filiação'].dt.month.map(meses_pt_br)
 
-        # Defining the order of the months
+        # Agrupando os dados por franquia e mês, somando a quantidade para cada grupo
+        dados_agrupados = df_ultimos_cinco_meses.groupby(['Franquia', 'Mês'])['quantidade'].sum().reset_index()
+
+        # Definindo a ordem dos meses
         meses_ordem = [
             'Janeiro',
             'Fevereiro',
@@ -125,21 +128,21 @@ def main():
             'Dezembro'
         ]
 
-        # Convert the 'Mês' column to the categorical type with the defined order
+        # Convertendo a coluna 'Mês' para o tipo categoria com a ordem definida
         dados_agrupados['Mês'] = pd.Categorical(dados_agrupados['Mês'], categories=meses_ordem, ordered=True)
 
-        # Sorting the data by the defined order
+        # Ordenando os dados pela ordem definida
         dados_agrupados = dados_agrupados.sort_values(by='Mês')
 
-        # Defining a color palette
+        # Definindo uma paleta de cores
         cores = ['#007bff', '#ffc107', '#28a745', '#17a2b8', '#ffc885']
 
-        # Function to create the plot
+        # Função para criar o gráfico
         def plotar_grafico(franquias_selecionadas):
             if not franquias_selecionadas:
                 st.write(" ")
             else:
-                # Sort selected franchises alphabetically
+                # Ordenando as franquias selecionadas em ordem alfabética
                 franquias_selecionadas.sort()
 
                 cor_iter = iter(cores * (len(franquias_selecionadas) // len(cores) + 1))
@@ -151,35 +154,35 @@ def main():
                         x=dados_franquia['Mês'],
                         y=dados_franquia['quantidade'],
                         name=franquia,
-                        hoverinfo='x+y',  # Show x, y, and custom text
-                        text=dados_franquia['quantidade'],  # Add quantity value as text
+                        hoverinfo='x+y',
+                        text=dados_franquia['quantidade'],
                         textposition='outside',
-                        marker=dict(color=next(cor_iter))  # Text position outside the bar
+                        marker=dict(color=next(cor_iter))
                     )
                     traces.append(trace)
 
-                # Creating the layout of the graph
+                # Criando o layout do gráfico
                 layout = go.Layout(
-                    title='Vendas de cada franquia nos últimos 5 meses',
+                    title='Vendas de cada franquia nos últimos 5 meses completos',
                     xaxis=dict(title='Mês'),
                     yaxis=dict(title='Quantidade'),
                 )
 
-                # Creating the figure
+                # Criando a figura
                 fig = go.Figure(data=traces, layout=layout)
                 fig.update_layout(showlegend=True, yaxis=dict(range=[0, dados_agrupados['quantidade'].max() * 1.15]))
 
-                # Displaying the graph
+                # Exibindo o gráfico
                 st.plotly_chart(fig, use_container_width=True, config={
-                    'displayModeBar': False,  # Hide the toolbar
-                    'displaylogo': False  # Hide the logo
+                    'displayModeBar': False,
+                    'displaylogo': False
                 })
 
-        # List of available franchises
+        # Lista de franquias disponíveis
         franquias_disponiveis = dados_agrupados['Franquia'].unique()
 
-        # Checkbox to select franchises
-        franquias_selecionadas = st.sidebar.multiselect('Selecione as franquias para visualizar as vendas nos últimos 5 meses', franquias_disponiveis, default=franquias_disponiveis)
+        # Checkbox para selecionar as franquias
+        franquias_selecionadas = st.sidebar.multiselect('Selecione as franquias para visualizar as vendas nos últimos 5 meses completos', franquias_disponiveis, default=franquias_disponiveis)
 
 #====================================================================================================================================================================#
         

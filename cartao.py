@@ -100,10 +100,10 @@ def main():
         # Calculando o primeiro dia do mês atual
         hoje = datetime.datetime.now().replace(day=1)
 
-        # Calculando o primeiro dia do mês 5 meses atrás
-        cinco_meses_atras = hoje - relativedelta(months=4)
+        # Calculando o primeiro dia do mês 3 meses atrás
+        cinco_meses_atras = hoje - relativedelta(months=2)
 
-        # Filtrar os dados para incluir apenas os últimos 5 meses completos
+        # Filtrar os dados para incluir apenas os últimos 3 meses completos
         df_ultimos_cinco_meses = df_projec[df_projec['Data filiação'] >= cinco_meses_atras]
 
         # Adicionando a coluna 'Mês' com os nomes em português
@@ -163,7 +163,7 @@ def main():
 
                 # Criando o layout do gráfico
                 layout = go.Layout(
-                    title='Vendas de cada franquia nos últimos 5 meses completos',
+                    title='Vendas de cada franquia nos últimos 3 meses completos',
                     xaxis=dict(title='Mês'),
                     yaxis=dict(title='Quantidade'),
                 )
@@ -182,7 +182,7 @@ def main():
         franquias_disponiveis = dados_agrupados['Franquia'].unique()
 
         # Checkbox para selecionar as franquias
-        franquias_selecionadas = st.sidebar.multiselect('Selecione as franquias para visualizar as vendas nos últimos 5 meses completos', franquias_disponiveis, default=franquias_disponiveis)
+        franquias_selecionadas = st.sidebar.multiselect('Selecione as franquias para visualizar as vendas nos últimos 3 meses completos', franquias_disponiveis, default=franquias_disponiveis)
 
 #====================================================================================================================================================================#
         

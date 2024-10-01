@@ -101,7 +101,7 @@ def main():
         hoje = datetime.datetime.now().replace(day=1)
 
         # Calculando o primeiro dia do mês 3 meses atrás
-        cinco_meses_atras = hoje - relativedelta(months=2)
+        cinco_meses_atras = hoje - relativedelta(months=3)
 
         # Filtrar os dados para incluir apenas os últimos 3 meses completos
         df_ultimos_cinco_meses = df_projec[df_projec['Data filiação'] >= cinco_meses_atras]

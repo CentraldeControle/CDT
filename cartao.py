@@ -17,15 +17,15 @@ st.set_page_config(
 # Função para pré-processamento
 def preprocess_data(data):
     # Corrigir o tipo de dado para datetime
-    data['Data filiação'] = pd.to_datetime(data['Data filiação'], errors='coerce')
+    data['Data Filiação'] = pd.to_datetime(data['Data Filiação'], errors='coerce')
     # Remover linhas com datas inválidas
-    data = data.dropna(subset=['Data filiação'])
+    data = data.dropna(subset=['Data Filiação'])
     # Converter datas para string no formato 'YYYY-MM-DD'
-    data['Data filiação'] = data['Data filiação'].dt.strftime('%Y-%m-%d')
+    data['Data Filiação'] = data['Data Filiação'].dt.strftime('%Y-%m-%d')
     # Adicionar coluna de quantidade com valor 1
     data['quantidade'] = 1
-    # Agrupar por data de filiação e franquia e calcular a contagem
-    data = data.groupby(['Data filiação','Franquia','Promotor Venda Prospecção']).size().reset_index(name='quantidade')
+    # Agrupar por data de Filiação e franquia e calcular a contagem
+    data = data.groupby(['Data Filiação','Franquia','Promotor de Vendas']).size().reset_index(name='quantidade')
     
     return data
 
@@ -72,15 +72,15 @@ def main():
         
         
         # Adicionando o código de projeção
-        processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
-        processed_data['mes'] = processed_data['Data filiação'].dt.month
+        processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
+        processed_data['mes'] = processed_data['Data Filiação'].dt.month
 
         df_projec = processed_data.copy()
         
-        # Convertendo a coluna 'Data filiação' para o tipo datetime
-        df_projec['Data filiação'] = pd.to_datetime(df_projec['Data filiação'])
+        # Convertendo a coluna 'Data Filiação' para o tipo datetime
+        df_projec['Data Filiação'] = pd.to_datetime(df_projec['Data Filiação'])
         
-        # Extraindo o mês da coluna 'Data filiação' e criando uma nova coluna 'Mês'
+        # Extraindo o mês da coluna 'Data Filiação' e criando uma nova coluna 'Mês'
   # Mapeando os números dos meses para os nomes em português
         meses_pt_br = {
             1: 'Janeiro',
@@ -104,10 +104,10 @@ def main():
         cinco_meses_atras = hoje - relativedelta(months=2)
 
         # Filtrar os dados para incluir apenas os últimos 3 meses completos
-        df_ultimos_cinco_meses = df_projec[df_projec['Data filiação'] >= cinco_meses_atras]
+        df_ultimos_cinco_meses = df_projec[df_projec['Data Filiação'] >= cinco_meses_atras]
 
         # Adicionando a coluna 'Mês' com os nomes em português
-        df_ultimos_cinco_meses['Mês'] = df_ultimos_cinco_meses['Data filiação'].dt.month.map(meses_pt_br)
+        df_ultimos_cinco_meses['Mês'] = df_ultimos_cinco_meses['Data Filiação'].dt.month.map(meses_pt_br)
 
         # Agrupando os dados por franquia e mês, somando a quantidade para cada grupo
         dados_agrupados = df_ultimos_cinco_meses.groupby(['Franquia', 'Mês'])['quantidade'].sum().reset_index()
@@ -189,7 +189,7 @@ def main():
         current_date = datetime.datetime.now()
 
         # Tenta filtrar os dados para o mês atual
-        df_current_month = processed_data[processed_data['Data filiação'].dt.month == current_date.month]
+        df_current_month = processed_data[processed_data['Data Filiação'].dt.month == current_date.month]
 
         # Se não houver dados para o mês atual, busca os dados do mês anterior
         if df_current_month.empty:
@@ -202,8 +202,8 @@ def main():
                 year = current_date.year
 
             # Filtra os dados para o mês anterior
-            df_current_month = processed_data[(processed_data['Data filiação'].dt.month == previous_month) &
-                                            (processed_data['Data filiação'].dt.year == year)]
+            df_current_month = processed_data[(processed_data['Data Filiação'].dt.month == previous_month) &
+                                            (processed_data['Data Filiação'].dt.year == year)]
 
 
         # Calcular o total de quantidade para cada promotor
@@ -215,7 +215,7 @@ def main():
             data_atual = datetime.date.today() - timedelta(days=1)
             
             # Verifica se existem dados para o mês atual no dataframe 'processed_data'
-            if not processed_data[processed_data['Data filiação'].dt.month == data_atual.month].empty:
+            if not processed_data[processed_data['Data Filiação'].dt.month == data_atual.month].empty:
                 # Usa dados do mês atual
                 primeiro_dia_mes_atual = data_atual.replace(day=1)
             else:
@@ -295,7 +295,7 @@ def main():
         metas = {'CALDAS NOVAS': 400, 'FORMOSA': 400, 'GOIANIA CENTRO NORTE': 1000, 'SAO JOAO DA BOA VISTA': 400}
 
         # Converta a coluna 'data' para o tipo datetime
-        processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
+        processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
         
         # Calcular o total de quantidade para cada promotor no mês atual
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()
@@ -375,17 +375,17 @@ def main():
         dados_filtrados = processed_data[processed_data['Franquia'] == franquia_selecionada3]
 
         # Agrupando os dados filtrados por Promotor e somando as quantidades
-        total_vendas_por_promotor = dados_filtrados.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+        total_vendas_por_promotor = dados_filtrados.groupby('Promotor de Vendas')['quantidade'].sum().reset_index()
 
         # Ordenando os promotores pelo total de vendas e pegando os top 5
         top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
 
 
         # Criando um gráfico de barras para visualizar os top 5 vendedores da franquia selecionada
-        fig1 = px.bar(top_5_vendedores, x='Promotor Venda Prospecção', y='quantidade',
+        fig1 = px.bar(top_5_vendedores, x='Promotor de Vendas', y='quantidade',
                     title=f'Top 5 Promotores de Venda - Franquia {franquia_selecionada3}',
-                    labels={'Promotor Venda Prospecção': 'Promotor', 'quantidade': 'Total de Vendas'},
-                    color='Promotor Venda Prospecção',
+                    labels={'Promotor de Vendas': 'Promotor', 'quantidade': 'Total de Vendas'},
+                    color='Promotor de Vendas',
                     text='quantidade',
                     color_discrete_sequence=cores)
 
@@ -399,8 +399,8 @@ def main():
 #====================================================================================================================================================================#    
 
         # Criando uma nova coluna 'Trimestre' e 'Ano' para facilitar a seleção
-        processed_data['Ano'] = processed_data['Data filiação'].dt.year
-        processed_data['Trimestre'] = processed_data['Data filiação'].dt.month.apply(lambda x: (x-1)//3 + 1)
+        processed_data['Ano'] = processed_data['Data Filiação'].dt.year
+        processed_data['Trimestre'] = processed_data['Data Filiação'].dt.month.apply(lambda x: (x-1)//3 + 1)
 
         # Obtendo os trimestres únicos disponíveis
         trimestres_unicos = processed_data[['Ano', 'Trimestre']].drop_duplicates()
@@ -424,16 +424,16 @@ def main():
         dados_filtrados = dados_trimestre_escolhido[dados_trimestre_escolhido['Franquia'] == franquia_selecionada3]
 
         # Agrupando por Promotor e somando as quantidades
-        total_vendas_por_promotor = dados_filtrados.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+        total_vendas_por_promotor = dados_filtrados.groupby('Promotor de Vendas')['quantidade'].sum().reset_index()
 
         # Ordenando e pegando os top 5 promotores
         top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
 
 
-        fig2 = px.bar(top_5_vendedores, x='Promotor Venda Prospecção', y='quantidade',
+        fig2 = px.bar(top_5_vendedores, x='Promotor de Vendas', y='quantidade',
                     title=f'Top 5 Promotores de Venda - Franquia {franquia_selecionada3}, {trimestre_escolhido}',
-                    labels={'Promotor Venda Prospecção': 'Promotor', 'quantidade': 'Total de Vendas'},
-                    color='Promotor Venda Prospecção',
+                    labels={'Promotor de Vendas': 'Promotor', 'quantidade': 'Total de Vendas'},
+                    color='Promotor de Vendas',
                     text='quantidade',
                     color_discrete_sequence=cores)
 
@@ -468,8 +468,8 @@ def main():
 # Resultados dos colaboradore do mês anterior
         
         # Criando uma nova coluna 'Ano' e 'Mês' para facilitar a seleção
-        processed_data['Ano'] = processed_data['Data filiação'].dt.year
-        processed_data['Mês'] = processed_data['Data filiação'].dt.month
+        processed_data['Ano'] = processed_data['Data Filiação'].dt.year
+        processed_data['Mês'] = processed_data['Data Filiação'].dt.month
 
         # Obtendo o ano e mês atual
         
@@ -506,14 +506,14 @@ def main():
             dados_franquia = dados_mes_passado[dados_mes_passado['Franquia'] == franquia]
             
             # Agrupando por Promotor e somando as quantidades
-            total_vendas_por_promotor = dados_franquia.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+            total_vendas_por_promotor = dados_franquia.groupby('Promotor de Vendas')['quantidade'].sum().reset_index()
 
             # Ordenando e pegando os top 5 promotores
             top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
             
             # Criando o gráfico de barras
             barra = go.Bar(
-                x=top_5_vendedores['Promotor Venda Prospecção'],
+                x=top_5_vendedores['Promotor de Vendas'],
                 y=top_5_vendedores['quantidade'],
                 text=top_5_vendedores['quantidade'],
                 textposition='outside',
@@ -561,10 +561,10 @@ def main():
             st.markdown('<hr>', unsafe_allow_html=True)
             
             # Sidebar para selecionar a data
-            selected_date = st.sidebar.date_input('Selecione uma data', min_value=df_projec['Data filiação'].min(), max_value=df_projec['Data filiação'].max(), value=df_projec['Data filiação'].max())
+            selected_date = st.sidebar.date_input('Selecione uma data', min_value=df_projec['Data Filiação'].min(), max_value=df_projec['Data Filiação'].max(), value=df_projec['Data Filiação'].max())
 
             # Filtrar os dados para a data selecionada
-            dados_selecionados = df_projec[df_projec['Data filiação'].dt.date == selected_date]
+            dados_selecionados = df_projec[df_projec['Data Filiação'].dt.date == selected_date]
 
             # Calcular a quantidade de cada franquia na data selecionada
             quantidade_por_franquia = dados_selecionados.groupby('Franquia')['quantidade'].sum().reset_index()
@@ -598,8 +598,8 @@ def main():
                 # Adicionar as barras de cada franquia ao subplot correspondente
 
         # Criando uma nova coluna 'Ano' e 'Mês' para facilitar a seleção
-        processed_data['Ano'] = processed_data['Data filiação'].dt.year
-        processed_data['Mês'] = processed_data['Data filiação'].dt.month
+        processed_data['Ano'] = processed_data['Data Filiação'].dt.year
+        processed_data['Mês'] = processed_data['Data Filiação'].dt.month
 
         # Obtendo o ano e mês atual
         ano_atual = datetime.datetime.now().year
@@ -629,14 +629,14 @@ def main():
             dados_franquia = dados_mes_atual[dados_mes_atual['Franquia'] == franquia]
             
             # Agrupando por Promotor e somando as quantidades
-            total_vendas_por_promotor = dados_franquia.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+            total_vendas_por_promotor = dados_franquia.groupby('Promotor de Vendas')['quantidade'].sum().reset_index()
 
             # Ordenando e pegando os top 5 promotores
             top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
             
             # Criando o gráfico de barras
             barra = go.Bar(
-                x=top_5_vendedores['Promotor Venda Prospecção'],
+                x=top_5_vendedores['Promotor de Vendas'],
                 y=top_5_vendedores['quantidade'],
                 text=top_5_vendedores['quantidade'],
                 textposition='outside',
@@ -713,14 +713,14 @@ def main():
 
 
 
-        processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
+        processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
 
         # Filtrar os dados para a unidade de Caldas Novas
         dados_caldas_novas = processed_data[processed_data['Franquia'] == 'CALDAS NOVAS']
 
         # Filtrar os dados dos últimos 3 meses
         data_limite = pd.Timestamp.today() - pd.DateOffset(months=3)
-        dados_caldas_novas_ultimos_3_meses = dados_caldas_novas[dados_caldas_novas['Data filiação'] >= data_limite]
+        dados_caldas_novas_ultimos_3_meses = dados_caldas_novas[dados_caldas_novas['Data Filiação'] >= data_limite]
 
         # Criando a figura com subplots para cada um dos 3 meses
         fig = make_subplots(
@@ -742,19 +742,19 @@ def main():
             
             # Filtra os dados para o mês de interesse
             dados_mes = dados_caldas_novas_ultimos_3_meses[
-                (dados_caldas_novas_ultimos_3_meses['Data filiação'] >= mes_inicio) &
-                (dados_caldas_novas_ultimos_3_meses['Data filiação'] < mes_fim)
+                (dados_caldas_novas_ultimos_3_meses['Data Filiação'] >= mes_inicio) &
+                (dados_caldas_novas_ultimos_3_meses['Data Filiação'] < mes_fim)
             ]
             
             # Agrupando por Promotor e somando as quantidades
-            total_vendas_por_promotor = dados_mes.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+            total_vendas_por_promotor = dados_mes.groupby('Promotor de Vendas')['quantidade'].sum().reset_index()
             
             # Ordenando e pegando os top 5 promotores
             top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
             
             # Criando o gráfico de barras
             barra = go.Bar(
-                x=top_5_vendedores['Promotor Venda Prospecção'],
+                x=top_5_vendedores['Promotor de Vendas'],
                 y=top_5_vendedores['quantidade'],
                 text=top_5_vendedores['quantidade'],
                 textposition='outside',
@@ -801,9 +801,9 @@ def main():
 
 
 
-        # Suponha que 'processed_data' é o seu DataFrame e 'Data filiação' a coluna com as datas de filiação
+        # Suponha que 'processed_data' é o seu DataFrame e 'Data Filiação' a coluna com as datas de Filiação
         # Converter a coluna de data para datetime, se ainda não estiver
-        processed_data['Data filiação'] = pd.to_datetime(processed_data['Data filiação'])
+        processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
 
         # Remover o filtro de mês e ano atual para considerar todas as datas
         # Filtrando os dados por franquia
@@ -823,14 +823,14 @@ def main():
             dados_franquia = processed_data[processed_data['Franquia'] == franquia]
             
             # Agrupando por Promotor e somando as quantidades
-            total_vendas_por_promotor = dados_franquia.groupby('Promotor Venda Prospecção')['quantidade'].sum().reset_index()
+            total_vendas_por_promotor = dados_franquia.groupby('Promotor de Vendas')['quantidade'].sum().reset_index()
 
             # Ordenando e pegando os top 5 promotores
             top_5_vendedores = total_vendas_por_promotor.sort_values(by='quantidade', ascending=False).head(5)
             
             # Criando o gráfico de barras
             barra = go.Bar(
-                x=top_5_vendedores['Promotor Venda Prospecção'],
+                x=top_5_vendedores['Promotor de Vendas'],
                 y=top_5_vendedores['quantidade'],
                 text=top_5_vendedores['quantidade'],
                 textposition='outside',
@@ -876,7 +876,7 @@ def main():
 
         df_motivo = pd.read_excel("data (1).xlsx", header=0)
 
-        # Suponha que 'df_motivo' é o seu DataFrame e 'Data última desfiliação' a coluna com as datas de desfiliação
+        # Suponha que 'df_motivo' é o seu DataFrame e 'Data última desfiliação' a coluna com as datas de desFiliação
         # Converter a coluna de data para datetime, se ainda não estiver
         df_motivo['Data última desfiliação'] = pd.to_datetime(df_motivo['Data última desfiliação'])
 
@@ -913,7 +913,7 @@ def main():
 
         # Ajustar layout e escalas
         fig.update_layout(
-            title_text="Top 5 Motivos de Desfiliação por Franquia",
+            title_text="Top 5 Motivos de DesFiliação por Franquia",
                           title={
                                 'x': 0.45,  # Centers the title horizontally
                                 'y': 1.0,  # Adjusts the vertical position if necessary
@@ -962,7 +962,7 @@ def main():
 
         # Ajustar layout e escalas
         fig.update_layout(
-            title_text="Top 5 Motivos de Desfiliação por Franquia",
+            title_text="Top 5 Motivos de DesFiliação por Franquia",
             title={
                 'x': 0.45,  # Centraliza o título horizontalmente
                 'y': 1.0,  # Ajusta a posição vertical se necessário
@@ -1017,7 +1017,7 @@ def main():
         fig.update_traces(texttemplate='%{text}', textposition='outside')
 
         # Ajustar o limite do eixo Y
-        fig.update_layout(title_text="Previsão de desfiliação",
+        fig.update_layout(title_text="Previsão de desFiliação",
                           title={
                                 'x': 0.5,  # Centers the title horizontally
                                 'y': 0.9,  # Adjusts the vertical position if necessary

@@ -292,7 +292,7 @@ def main():
 #====================================================================================================================================================================#
 
         # Definir metas de quantidade para cada promotor por mês
-        metas = {'CALDAS NOVAS': 400, 'FORMOSA': 400, 'GOIANIA CENTRO NORTE': 1000, 'SAO JOAO DA BOA VISTA': 400}
+        metas = {'CALDAS NOVAS': 400, 'FORMOSA': 400, 'GOIANIA CENTRO NORTE': 1000, 'MANHUACU': 400, 'SAO JOAO DA BOA VISTA': 400}
 
         # Converta a coluna 'data' para o tipo datetime
         processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
@@ -614,13 +614,13 @@ def main():
         # Criando uma figura com 4 subplots em uma única linha
         fig = make_subplots(
             rows=1, 
-            cols=4, 
+            cols=5, 
             subplot_titles=[f'Franquia {franquia}' for franquia in franquias],
             horizontal_spacing=0.05  # Espaçamento horizontal entre os gráficos
         )
 
         # Variáveis para posição dos subplots
-        positions = [(1, 1), (1, 2), (1, 3), (1, 4)]
+        positions = [(1, 1), (1, 2), (1, 3), (1, 4),(1, 5)]
 
 
 

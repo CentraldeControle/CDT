@@ -213,8 +213,7 @@ def main():
         def calcular_meta_restante(df_total_por_promotor, processed_data):
             # Obtém a data atual
             data_atual = datetime.date.today() - timedelta(days=1)
-            st.write(data_atual)
-            
+           
             # Verifica se existem dados para o mês atual no dataframe 'processed_data'
             if not processed_data[processed_data['Data Filiação'].dt.month == data_atual.month].empty:
                 # Usa dados do mês atual

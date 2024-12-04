@@ -213,22 +213,21 @@ def main():
         def calcular_meta_restante(df_total_por_promotor, processed_data):
             # Obtém a data atual
             data_atual = datetime.date.today() - timedelta(days=1)
+            st.write(data_atual)
             
             # Verifica se existem dados para o mês atual no dataframe 'processed_data'
             if not processed_data[processed_data['Data Filiação'].dt.month == data_atual.month].empty:
                 # Usa dados do mês atual
                 primeiro_dia_mes_atual = data_atual.replace(day=1)
             else:
-                # Se não houver dados para o mês atual, ajusta para o mês anterior
                 if data_atual.month == 1:
-                    data_atual = data_atual.replace(year=data_atual.year - 1, month=12, day=31)
+                    data_atual = data_atual.replace(year=data_atual.year - 1, month=12, day=1)
                 else:
-                    data_atual = data_atual.replace(month=data_atual.month - 1, day=1) + timedelta(days=-1)
-                primeiro_dia_mes_atual = data_atual.replace(day=1)
+                    data_atual = data_atual.replace(month=data_atual.month - 1, day=1)
+
             
             # Obtém o último dia do mês atual
-            ultimo_dia_mes_atual = data_atual.replace(day=1, month=data_atual.month % 12 + 1) - timedelta(days=1)
-            
+            ultimo_dia_mes_atual = (data_atual.replace(day=1) + timedelta(days=31)).replace(day=1) - timedelta(days=1)
             # Calcula quantos dias faltam para o fim do mês
             dias_restantes = (ultimo_dia_mes_atual - data_atual).days -1
             
@@ -237,13 +236,11 @@ def main():
             
             # Garante que 'dias_passados' seja pelo menos 1 para evitar divisão por zero
             dias_passados = max(1, dias_passados)
-            
             # Conta a quantidade de domingos restantes no mês
             domingos_restantes = sum(1 for i in range(dias_restantes) if (data_atual + timedelta(days=i)).weekday() == 6)
             
             # Calcula os dias restantes excluindo os domingos
             dias_restantes_sem_domingos = dias_restantes - domingos_restantes
-            
             # Calcula a média diária excluindo os domingos
             df_total_por_promotor['media_diaria'] = df_total_por_promotor['quantidade'] / dias_passados
             
@@ -296,6 +293,7 @@ def main():
 
         # Converta a coluna 'data' para o tipo datetime
         processed_data['Data Filiação'] = pd.to_datetime(processed_data['Data Filiação'])
+        
         
         # Calcular o total de quantidade para cada promotor no mês atual
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()

@@ -210,19 +210,9 @@ def main():
         df_total_por_promotor = df_current_month.groupby('Franquia')['quantidade'].sum().reset_index()
         
 
-        from datetime import datetime, timedelta
-
         def calcular_meta_restante(df_total_por_promotor, processed_data):
-            # Certifique-se de inicializar as variáveis
-            data_atual = datetime.now()
-            primeiro_dia_mes_atual = datetime(data_atual.year, data_atual.month, 1)
-
-            # Calcule o número de dias úteis no mês até a data atual
-            dias_passados = sum(
-                1 for i in range((data_atual - primeiro_dia_mes_atual).days + 1)
-                if (primeiro_dia_mes_atual + timedelta(days=i)).weekday() != 6  # Exclui domingos
-            )
-           
+            # Obtém a data atual
+            data_atual = datetime.date.today() - timedelta(days=1)
            
             # Verifica se existem dados para o mês atual no dataframe 'processed_data'
             if not processed_data[processed_data['Data Filiação'].dt.month == data_atual.month].empty:

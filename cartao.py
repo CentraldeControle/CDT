@@ -170,13 +170,71 @@ def main():
 
                 # Criando a figura
                 fig = go.Figure(data=traces, layout=layout)
-                fig.update_layout(showlegend=True, yaxis=dict(range=[0, dados_agrupados['quantidade'].max() * 1.15]))
+
+                # Determinando a posição da linha
+                # Supondo que os meses no eixo x estão ordenados como ["Nov/2024", "Dez/2024", "Jan/2025"]
+                meses = dados_agrupados['Mês'].unique()
+                indice_janeiro = list(meses).index("Novembro")  # Substitua pelo rótulo correto
+                posicao_linha = (indice_janeiro - 0.5)  # Posição entre Dez/2024 e Jan/2025
+
+                # Adicionando a linha separadora
+                fig.add_shape(
+                    type="line",
+                    x0=posicao_linha,
+                    x1=posicao_linha,
+                    y0=0,
+                    y1=dados_agrupados['quantidade'].max() * 1.15,
+                    line=dict(color="red", width=2, dash="dash"),
+                    xref="x",
+                    yref="y"
+                )
+
+                # Adicionando as anotações para "2024" e "2025"
+                fig.add_annotation(
+                    x=posicao_linha - 0.1,  # Ajuste para a esquerda
+                    y=dados_agrupados['quantidade'].max() ,
+                    text="2025",
+                    showarrow=False,
+                    font=dict(size=12, color="black"),
+                    xanchor="right",
+                    yanchor="bottom"
+                )
+                fig.add_annotation(
+                    x=posicao_linha + 0.1,  # Ajuste para a direita
+                    y=dados_agrupados['quantidade'].max(),
+                    text="2024",
+                    showarrow=False,
+                    font=dict(size=12, color="black"),
+                    xanchor="left",
+                    yanchor="bottom"
+                )
+
+
+                # Adicionando uma anotação para a linha na legenda
+                fig.add_trace(
+                    go.Scatter(
+                        x=[None],  # Não plota pontos reais no gráfico
+                        y=[None],
+                        mode="lines",
+                        line=dict(color="red", width=2, dash="dash"),
+                        name="Separador 2024/2025"
+                    )
+                )
+
+                # Ajustando o layout
+                fig.update_layout(
+                    showlegend=True,
+                    yaxis=dict(range=[0, dados_agrupados['quantidade'].max() * 1.15]),
+                )
 
                 # Exibindo o gráfico
                 st.plotly_chart(fig, use_container_width=True, config={
                     'displayModeBar': False,
                     'displaylogo': False
                 })
+
+
+
 
         # Lista de franquias disponíveis
         franquias_disponiveis = dados_agrupados['Franquia'].unique()

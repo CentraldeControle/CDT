@@ -174,7 +174,7 @@ def main():
                 # Determinando a posição da linha
                 # Supondo que os meses no eixo x estão ordenados como ["Nov/2024", "Dez/2024", "Jan/2025"]
                 meses = dados_agrupados['Mês'].unique()
-                indice_janeiro = list(meses).index("Novembro")  # Substitua pelo rótulo correto
+                indice_janeiro = list(meses).index("Dezembro")  # Substitua pelo rótulo correto
                 posicao_linha = (indice_janeiro - 0.5)  # Posição entre Dez/2024 e Jan/2025
 
                 # Adicionando a linha separadora

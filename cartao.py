@@ -499,7 +499,7 @@ def main():
         franquias = sorted(dados_mes_passado['Franquia'].unique())
 
         # Verificando o número de franquias para ajustar o número de colunas
-        cols = min(4, len(franquias))
+        cols = min(5, len(franquias))
 
         # Criando uma figura com subplots em uma única linha
         fig = make_subplots(

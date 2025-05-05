@@ -424,7 +424,12 @@ def main():
         mes_opcao = st.sidebar.radio("Escolha o mês:", ["Mês Atual", "Mês Passado"])
 
         if mes_opcao == "Mês Atual":
-            franquias_selecionadas = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique(), default=df_total_por_promotor['Franquia'])
+            franquias_selecionadas = st.sidebar.multiselect(
+            f'Projeção da(s) franquia(s): ({mes_opcao})',
+            df_total_por_promotor['Franquia'].unique(),
+            default=df_total_por_promotor['Franquia'],
+            key=f"multiselect_{mes_opcao.replace(' ', '_')}"
+        )
             plotar_grafico2(franquias_selecionadas, df_total_por_promotor)
         else:
             franquias_selecionadas_passado = st.sidebar.multiselect('Projeção da(s) franquia(s) - Mês Passado:', df_total_por_promotor_passado['Franquia'].unique(), default=df_total_por_promotor_passado['Franquia'])

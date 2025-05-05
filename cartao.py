@@ -296,6 +296,10 @@ def main():
                                             'displayModeBar': False,  # Para ocultar a barra de ferramentas
                                             'displaylogo': False  })# Para ocultar o logo))
 
+
+
+
+
 #====================================================================================================================================================================#
 
         # Definir metas de quantidade para cada promotor por mês
@@ -373,7 +377,58 @@ def main():
 
 #====================================================================================================================================================================#
 
-       
+#====================================================================================================================================================================#
+
+        def calcular_meta_restante2(df_meta, df_filtrado, primeiro_dia_mes):
+            
+            data_atual = pd.to_datetime("today")
+
+            dias_passados = sum(
+                1 for i in range((data_atual - primeiro_dia_mes).days + 1)
+                if (primeiro_dia_mes + timedelta(days=i)).weekday() != 6
+            )
+
+            dias_totais = sum(
+                1 for i in range((data_atual.replace(day=1) + pd.offsets.MonthEnd(0)).day)
+                if (primeiro_dia_mes + timedelta(days=i)).weekday() != 6
+            )
+
+            proporcao_dias = dias_passados / dias_totais if dias_totais > 0 else 1
+            df_meta['meta_restante'] = df_meta['atingido']  # A projeção é igual ao valor atingido
+            return df_meta
+        # Obter o primeiro dia do mês atual
+        hoje = pd.to_datetime("today")
+        primeiro_dia_mes_atual = hoje.replace(day=1)
+
+        # Obter o primeiro e último dia do mês passado
+        primeiro_dia_mes_passado = (primeiro_dia_mes_atual - pd.DateOffset(months=1)).replace(day=1)
+        ultimo_dia_mes_passado = primeiro_dia_mes_atual - pd.DateOffset(days=1)
+
+        # Filtrar os dados do mês passado
+        df_last_month = processed_data[
+            (processed_data['Data Filiação'] >= primeiro_dia_mes_passado) &
+            (processed_data['Data Filiação'] <= ultimo_dia_mes_passado)
+        ]
+        
+        
+
+        df_total_por_promotor_passado = df_last_month.groupby('Franquia')['quantidade'].sum().reset_index()
+        df_total_por_promotor_passado['meta'] = df_total_por_promotor_passado['Franquia'].map(metas)
+        df_total_por_promotor_passado['atingido'] = df_total_por_promotor_passado['quantidade']
+        df_total_por_promotor_passado['falta'] = df_total_por_promotor_passado['meta'] - df_total_por_promotor_passado['quantidade']
+
+        # Calcular a projeção/meta restante
+        df_total_por_promotor_passado = calcular_meta_restante2(df_total_por_promotor_passado, df_last_month, primeiro_dia_mes_passado)
+        df_total_por_promotor = calcular_meta_restante2(df_total_por_promotor, processed_data, primeiro_dia_mes_atual)
+        # Adicionar seleção de mês
+        mes_opcao = st.sidebar.radio("Escolha o mês:", ["Mês Atual", "Mês Passado"])
+
+        if mes_opcao == "Mês Atual":
+            franquias_selecionadas = st.sidebar.multiselect('Projeção da(s) franquia(s):', df_total_por_promotor['Franquia'].unique(), default=df_total_por_promotor['Franquia'])
+            plotar_grafico2(franquias_selecionadas, df_total_por_promotor)
+        else:
+            franquias_selecionadas_passado = st.sidebar.multiselect('Projeção da(s) franquia(s) - Mês Passado:', df_total_por_promotor_passado['Franquia'].unique(), default=df_total_por_promotor_passado['Franquia'])
+            plotar_grafico2(franquias_selecionadas_passado, df_total_por_promotor_passado)       
 
         # Adicionando um seletor na sidebar para escolher a franquia
         franquias = processed_data['Franquia'].unique()

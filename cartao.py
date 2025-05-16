@@ -32,36 +32,24 @@ def preprocess_data(data):
 def main():
     st.markdown("<h1 style='text-align: center;'>CDT</h1>", unsafe_allow_html=True)
 
-    # List all Excel files in the current directory
-    # List all Excel files in the current directory
     excel_files = [f for f in os.listdir('.') if f.endswith('.xlsx')]
 
-    # Initialize an error message and data frames list
     error_message = ""
     data_frames = []
 
     if len(excel_files) < 3:
         error_message = 'Menos de três arquivos Excel encontrados na pasta.'
     else:
-        # Sort the files by modification time, descending
         sorted_files = sorted(excel_files, key=lambda x: os.path.getmtime(x), reverse=True)
-        # Select the three most recent Excel files
         selected_files = sorted_files[:3]
 
-        # Read data from each selected Excel file
         for file_path in selected_files:
             try:
-                # Read each Excel file into a DataFrame
                 df = pd.read_excel(file_path)
                 data_frames.append(df)
             except Exception as e:
                 error_message = f"Failed to read {file_path}: {str(e)}"
 
-    # Comment out to prevent execution
-    # st.write(selected_files)
-    # for df in data_frames:
-    #     print(df.head())  # Display the first few rows of each DataFrame
-    # print(error_message) if error_message else None
 
     if selected_files is not None:
         # Ler o arquivo Excel
@@ -81,7 +69,7 @@ def main():
         df_projec['Data Filiação'] = pd.to_datetime(df_projec['Data Filiação'])
         
         # Extraindo o mês da coluna 'Data Filiação' e criando uma nova coluna 'Mês'
-  # Mapeando os números dos meses para os nomes em português
+        # Mapeando os números dos meses para os nomes em português
         meses_pt_br = {
             1: 'Janeiro',
             2: 'Fevereiro',
